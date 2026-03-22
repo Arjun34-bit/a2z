@@ -1,0 +1,66 @@
+import redisClient from '../redis/client';
+import User from '../models/User';
+import { generateOTP } from '../utils/otp';
+import { generateTokens } from '../utils/jwt';
+
+const OTP_TTL = 300; // 5 minutes in seconds
+const MAX_ATTEMPTS = 5;
+
+export const requestOtpService = async (phoneOrEmail: string) => {
+  const attemptsKey = `attempts:${phoneOrEmail}`;
+  const attemptsAmount = await redisClient.get(attemptsKey);
+  
+  if (attemptsAmount && parseInt(attemptsAmount) >= MAX_ATTEMPTS) {
+    throw new Error('Too many OTP attempts. Please try again later.');
+  }
+
+  const otp = generateOTP();
+  const redisKey = `otp:${phoneOrEmail}`;
+  
+  await redisClient.setEx(redisKey, OTP_TTL, otp);
+  
+  await redisClient.incr(attemptsKey);
+  if (!attemptsAmount) {
+    await redisClient.expire(attemptsKey, 900);
+  }
+
+  // As requested, console log the OTP instead of sending via provider
+  console.log(`[SIMULATED SMS/EMAIL] -> Sending OTP ${otp} to ${phoneOrEmail}`);
+
+  return { success: true, message: 'OTP sent successfully' };
+};
+
+export const verifyOtpService = async (phoneOrEmail: string, otp: string) => {
+  const redisKey = `otp:${phoneOrEmail}`;
+  const storedOtp = await redisClient.get(redisKey);
+
+  if (!storedOtp) {
+    throw new Error('OTP expired or not found.');
+  }
+
+  if (storedOtp !== otp) {
+    throw new Error('Invalid OTP provided.');
+  }
+
+  await redisClient.del(redisKey);
+  
+  const attemptsKey = `attempts:${phoneOrEmail}`;
+  await redisClient.del(attemptsKey);
+
+  const [user, created] = await User.findOrCreate({
+    where: { phoneOrEmail },
+    defaults: { phoneOrEmail }
+  });
+
+  const tokens = generateTokens({ id: user.id, role: user.role });
+
+  return {
+    success: true,
+    message: 'Login successful',
+    isNewUser: created,
+    data: { 
+      user: { id: user.id, phoneOrEmail: user.phoneOrEmail, role: user.role },
+      tokens 
+    }
+  };
+};
