@@ -1,7 +1,7 @@
 import { Response } from 'express';
 import { AuthRequest } from '../middlewares/auth.middleware';
-import sequelize from '../db/index';
 import { createOrderSchema } from '../validations/order.validation';
+import { createOrderInDB, getOrdersFromDB } from '../services/order.service';
 
 export const createOrder = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -15,16 +15,12 @@ export const createOrder = async (req: AuthRequest, res: Response): Promise<void
 
     const { product_name, quantity } = validatedData;
 
-    const [newOrder]: any = await sequelize.query(
-      `INSERT INTO "Orders" (user_id, product_name, quantity) 
-       VALUES (:userId, :product_name, :quantity) RETURNING *`,
-      { replacements: { userId, product_name, quantity } }
-    );
+    const newOrder = await createOrderInDB(userId, product_name, quantity);
 
     res.status(201).json({
       success: true,
       message: 'Order placed successfully',
-      data: newOrder[0],
+      data: newOrder,
     });
   } catch (error: any) {
     if (error.name === 'ZodError') {
@@ -40,19 +36,7 @@ export const getOrders = async (req: AuthRequest, res: Response): Promise<void> 
     const userId = req.user?.id;
     const role = req.user?.role;
 
-    let query = `SELECT o.*, u.name as user_name, u.email as user_email 
-                 FROM "Orders" o 
-                 JOIN "Users" u ON o.user_id = u.id`;
-    let replacements = {};
-
-    if (role !== 'admin') {
-      query += ` WHERE o.user_id = :userId`;
-      replacements = { userId };
-    }
-
-    query += ` ORDER BY o.created_at DESC`;
-
-    const [orders] = await sequelize.query(query, { replacements });
+    const orders = await getOrdersFromDB(role, userId);
 
     res.status(200).json({
       success: true,

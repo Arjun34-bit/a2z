@@ -1,23 +1,19 @@
 import { Response } from 'express';
 import { AuthRequest } from '../middlewares/auth.middleware';
-import sequelize from '../db/index';
 import { createSupplierSchema } from '../validations/supplier.validation';
+import { createSupplierInDB, getAllSuppliersFromDB } from '../services/supplier.service';
 
 export const createSupplier = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const validatedData = createSupplierSchema.parse(req.body);
     const { name, contact_info } = validatedData;
 
-    const [newSupplier]: any = await sequelize.query(
-      `INSERT INTO "Suppliers" (name, contact_info) 
-       VALUES (:name, :contact_info) RETURNING *`,
-      { replacements: { name, contact_info: contact_info || null } }
-    );
+    const newSupplier = await createSupplierInDB(name, contact_info || null);
 
     res.status(201).json({
       success: true,
       message: 'Supplier added successfully',
-      data: newSupplier[0],
+      data: newSupplier,
     });
   } catch (error: any) {
     if (error.name === 'ZodError') {
@@ -30,9 +26,7 @@ export const createSupplier = async (req: AuthRequest, res: Response): Promise<v
 
 export const getSuppliers = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const [suppliers] = await sequelize.query(
-      `SELECT * FROM "Suppliers" ORDER BY created_at DESC`
-    );
+    const suppliers = await getAllSuppliersFromDB();
 
     res.status(200).json({
       success: true,
