@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
 import sequelize from '../db/index';
 import { registerSchema, loginSchema } from '../validations/auth.validation';
-import { generateToken } from '../utils/jwt';
+import { generateToken, verifyRefreshToken } from '../utils/jwt';
 import { requestOtpService, verifyOtpService } from '../services/auth.service';
 import { checkEmailExists, findUserByEmail, createUser } from '../services/user.service';
 
@@ -11,6 +11,8 @@ export const register = async (req: Request, res: Response): Promise<void> => {
   try {
     const validatedData = registerSchema.parse(req.body);
     const { name, email, password, role } = validatedData;
+
+    console.log("req.body----->", req.body)
 
     // Check if user exists
     const emailExists = await checkEmailExists(email);
@@ -61,14 +63,14 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    const token = generateToken({ id: user.id, role: user.role });
+    // Generate and send OTP for MFA
+    await requestOtpService(user.email);
 
     res.status(200).json({
       success: true,
-      message: 'Login successful',
+      message: 'Credentials valid. OTP sent to your email.',
       data: {
-        user: { id: user.id, name: user.name, email: user.email, role: user.role },
-        token,
+        email: user.email,
       },
     });
   } catch (error: any) {
@@ -111,4 +113,26 @@ export const verifyOtp = async (req: Request, res: Response): Promise<void> => {
     res.status(401).json({ success: false, message: error.message });
   }
 };
+
+export const refreshToken = async (req: Request, res: Response): Promise<void> => {
+  const { refreshToken } = req.body;
+  
+  if (!refreshToken) {
+    res.status(401).json({ success: false, message: 'Refresh token required' });
+    return;
+  }
+
+  try {
+     const decoded: any = verifyRefreshToken(refreshToken);
+     
+     // Issue a new access token
+     const newAccessToken = generateToken({ id: decoded.id, role: decoded.role });
+     
+     res.status(200).json({ success: true, data: { accessToken: newAccessToken } });
+  } catch (error) {
+     res.status(403).json({ success: false, message: 'Invalid or expired refresh token. Please log in again.' });
+  }
+};
+
+
 

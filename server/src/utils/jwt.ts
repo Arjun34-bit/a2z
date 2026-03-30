@@ -21,3 +21,7 @@ export const generateTokens = (payload: { id: number; role?: string }) => {
 export const verifyToken = (token: string) => {
   return jwt.verify(token, SECRET);
 };
+
+export const verifyRefreshToken = (token: string) => {
+  return jwt.verify(token, REFRESH_SECRET);
+};

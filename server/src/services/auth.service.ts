@@ -2,6 +2,7 @@ import redisClient from '../redis/client';
 import User from '../models/User';
 import { generateOTP } from '../utils/otp';
 import { generateTokens } from '../utils/jwt';
+import { findUserByEmail } from './user.service';
 
 const OTP_TTL = 300; // 5 minutes in seconds
 const MAX_ATTEMPTS = 5;
@@ -47,19 +48,18 @@ export const verifyOtpService = async (phoneOrEmail: string, otp: string) => {
   const attemptsKey = `attempts:${phoneOrEmail}`;
   await redisClient.del(attemptsKey);
 
-  const [user, created] = await User.findOrCreate({
-    where: { phoneOrEmail },
-    defaults: { phoneOrEmail }
-  });
+  const user = await findUserByEmail(phoneOrEmail);
+  if (!user) {
+    throw new Error('User not found.');
+  }
 
   const tokens = generateTokens({ id: user.id, role: user.role });
 
   return {
     success: true,
     message: 'Login successful',
-    isNewUser: created,
     data: { 
-      user: { id: user.id, phoneOrEmail: user.phoneOrEmail, role: user.role },
+      user: { id: user.id, email: user.email, role: user.role, name: user.name },
       tokens 
     }
   };
