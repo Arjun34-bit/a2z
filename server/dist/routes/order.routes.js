@@ -4,6 +4,6 @@ const express_1 = require("express");
 const order_controller_1 = require("../controllers/order.controller");
 const auth_middleware_1 = require("../middlewares/auth.middleware");
 const router = (0, express_1.Router)();
-router.post('/', auth_middleware_1.authenticate, order_controller_1.createOrder); // User places order
-router.get('/', auth_middleware_1.authenticate, order_controller_1.getOrders); // User views own, Admin views all
+router.post('/', auth_middleware_1.authenticate, order_controller_1.orderController.createOrder); // User places order
+router.get('/', auth_middleware_1.authenticate, order_controller_1.orderController.getOrders); // User views own, Admin views all
 exports.default = router;
