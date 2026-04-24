@@ -18,18 +18,11 @@ import authRoutes from './routes/auth.routes';
 
 // Basic Route
 app.get('/', (req: Request, res: Response) => {
-  res.send('Drop Shipping API is running...');
+  res.send('Auth Microservice is running...');
 });
 
 // API Routes
 app.use('/api/v1/auth', authRoutes);
-import orderRoutes from './routes/order.routes';
-import supplierRoutes from './routes/supplier.routes';
-import poRoutes from './routes/po.routes';
-
-app.use('/api/v1/orders', orderRoutes);
-app.use('/api/v1/suppliers', supplierRoutes);
-app.use('/api/v1/pos', poRoutes);
 
 // Global Error Handler
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {

@@ -37,51 +37,7 @@ export const initializeDatabase = async () => {
       END $$;
     `);
 
-    // 2. Create Suppliers Table
-    await sequelize.query(`
-      CREATE TABLE IF NOT EXISTS "Suppliers" (
-        id SERIAL PRIMARY KEY,
-        name VARCHAR(255) NOT NULL,
-        contact_info VARCHAR(255),
-        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-      );
-    `);
-
-    // 3. Create Orders Table (Placed by Users)
-    await sequelize.query(`
-      CREATE TABLE IF NOT EXISTS "Orders" (
-        id SERIAL PRIMARY KEY,
-        user_id INTEGER REFERENCES "Users"(id) ON DELETE CASCADE,
-        product_name VARCHAR(255) NOT NULL,
-        quantity INTEGER NOT NULL,
-        status VARCHAR(50) DEFAULT 'pending',
-        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-      );
-    `);
-
-    // 4. Create PurchaseOrders Table (Raised by Admins)
-    await sequelize.query(`
-      CREATE TABLE IF NOT EXISTS "PurchaseOrders" (
-        id SERIAL PRIMARY KEY,
-        description TEXT NOT NULL,
-        status VARCHAR(50) DEFAULT 'issued',
-        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-      );
-    `);
-
-    // 5. Create PO_Suppliers (Join table for Admin selecting multiple suppliers for a PO)
-    await sequelize.query(`
-      CREATE TABLE IF NOT EXISTS "POSuppliers" (
-        po_id INTEGER REFERENCES "PurchaseOrders"(id) ON DELETE CASCADE,
-        supplier_id INTEGER REFERENCES "Suppliers"(id) ON DELETE CASCADE,
-        PRIMARY KEY (po_id, supplier_id)
-      );
-    `);
-
-    console.log('Database tables verified/created successfully via raw SQL.');
+    console.log('Auth database tables verified/created successfully.');
   } catch (error) {
     console.error('Error initializing database:', error);
   }
