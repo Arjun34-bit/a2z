@@ -1,11 +1,11 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
-import sequelize from '../db/index';
+import sequelize from '@shared/db/index';
 import { registerSchema, loginSchema } from '../validations/auth.validation';
-import { generateToken, verifyRefreshToken } from '../utils/jwt';
-import { authService } from '../services/auth.service';
-import { userService } from '../services/user.service';
-import { decryptPayload } from '../utils/crypto';
+import { generateToken, verifyRefreshToken } from '@shared/utils/jwt';
+import { authService } from '@auth/services/auth.service';
+import { userService } from '@auth/services/user.service';
+import { decryptPayload } from '@shared/utils/crypto';
 
 class AuthController {
   public register = async (req: Request, res: Response): Promise<void> => {

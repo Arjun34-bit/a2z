@@ -1,7 +1,7 @@
-import redisClient from '../redis/client';
-import User from '../models/User';
-import { generateOTP } from '../utils/otp';
-import { generateTokens } from '../utils/jwt';
+import redisClient from '@shared/redis/client';
+import User from '@shared/models/User';
+import { generateOTP } from '@shared/utils/otp';
+import { generateTokens } from '@shared/utils/jwt';
 import { userService } from './user.service';
 
 const OTP_TTL = 300; // 5 minutes in seconds

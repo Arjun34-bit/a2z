@@ -1,7 +1,7 @@
 import app from './app';
-import { connectDB } from './db/index';
-import { initializeDatabase } from './db/init';
-import { connectRedis } from './redis/client';
+import { connectDB } from '@shared/db/index';
+import { initializeDatabase } from '@shared/db/init';
+import { connectRedis } from '@shared/redis/client';
 
 const PORT = process.env.PORT || 8000;
 

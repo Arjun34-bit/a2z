@@ -1,4 +1,4 @@
-import sequelize from '../db/index';
+import sequelize from '@shared/db/index';
 
 class UserService {
   public checkEmailExists = async (email: string) => {

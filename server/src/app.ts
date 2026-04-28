@@ -14,7 +14,7 @@ app.use(cors());
 app.use(express.json());
 app.use(morgan('dev'));
 
-import authRoutes from './routes/auth.routes';
+import authRoutes from '@auth/routes/auth.routes';
 
 // Basic Route
 app.get('/', (req: Request, res: Response) => {

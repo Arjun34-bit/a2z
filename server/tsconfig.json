@@ -4,6 +4,15 @@
     "module": "CommonJS",
     "rootDir": "./src",
     "outDir": "./dist",
+    "baseUrl": "./src",
+    "paths": {
+      "@shared/*": ["modules/shared/*"],
+      "@auth/*": ["modules/auth/*"],
+      "@marketplace/*": ["modules/marketplace/*"],
+      "@booking/*": ["modules/booking/*"],
+      "@payment/*": ["modules/payment/*"],
+      "@notification/*": ["modules/notification/*"]
+    },
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "strict": true,
