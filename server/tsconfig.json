@@ -6,11 +6,15 @@
     "outDir": "./dist",
     "baseUrl": "./src",
     "paths": {
+      "@infrastructure/*": ["infrastructure/*"],
       "@shared/*": ["modules/shared/*"],
       "@auth/*": ["modules/auth/*"],
-      "@marketplace/*": ["modules/marketplace/*"],
+      "@user/*": ["modules/user/*"],
+      "@artist/*": ["modules/artist/*"],
+      "@admin/*": ["modules/admin/*"],
       "@booking/*": ["modules/booking/*"],
       "@payment/*": ["modules/payment/*"],
+      "@marketplace/*": ["modules/marketplace/*"],
       "@notification/*": ["modules/notification/*"]
     },
     "esModuleInterop": true,

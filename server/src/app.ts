@@ -1,33 +1,56 @@
 import express, { Application, Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
-import dotenv from 'dotenv';
 import morgan from 'morgan';
 
-dotenv.config();
+import { AuthController } from '@auth/index';
+import { createAuthRoutes } from '@auth/index';
 
-const app: Application = express();
+import { UserController } from '@user/index';
+import { createUserRoutes } from '@user/index';
 
-// Middlewares
-app.use(helmet());
-app.use(cors());
-app.use(express.json());
-app.use(morgan('dev'));
+import { ArtistController } from '@artist/index';
+import { createArtistRoutes } from '@artist/index';
 
-import authRoutes from '@auth/routes/auth.routes';
+import { AdminController } from '@admin/index';
+import { createAdminRoutes } from '@admin/index';
 
-// Basic Route
-app.get('/', (req: Request, res: Response) => {
-  res.send('Auth Microservice is running...');
-});
+export interface AppControllers {
+  authController: AuthController;
+  userController: UserController;
+  artistController: ArtistController;
+  adminController: AdminController;
+}
 
-// API Routes
-app.use('/api/v1/auth', authRoutes);
+/**
+ * Creates and configures the Express application.
+ * Accepts injected controllers — NO internal instantiation.
+ */
+export const createApp = (controllers: AppControllers): Application => {
+  const app: Application = express();
 
-// Global Error Handler
-app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
-  console.error(err.stack);
-  res.status(500).json({ success: false, message: 'Internal Server Error' });
-});
+  // Middlewares
+  app.use(helmet());
+  app.use(cors());
+  app.use(express.json());
+  app.use(morgan('dev'));
 
-export default app;
+  // Health Check
+  app.get('/', (req: Request, res: Response) => {
+    res.send('A2Z Modular Monolith is running...');
+  });
+
+  // API Routes
+  app.use('/api/v1/auth', createAuthRoutes(controllers.authController));
+  app.use('/api/v1/users', createUserRoutes(controllers.userController));
+  app.use('/api/v1/artists', createArtistRoutes(controllers.artistController));
+  app.use('/api/v1/admin', createAdminRoutes(controllers.adminController));
+
+  // Global Error Handler
+  app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
+    console.error(err.stack);
+    res.status(500).json({ success: false, message: 'Internal Server Error' });
+  });
+
+  return app;
+};
