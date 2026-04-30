@@ -3,7 +3,7 @@ import { IAuthService } from '../application/interfaces/IAuthService';
 import { verifyRefreshToken, generateToken } from '@shared/index';
 
 export class AuthController {
-  constructor(private readonly authService: IAuthService) {}
+  constructor(private readonly authService: IAuthService) { }
 
   sendOtp = async (req: Request, res: Response): Promise<void> => {
     try {

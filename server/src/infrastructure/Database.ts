@@ -13,7 +13,7 @@ export class Database {
   private static instance: Sequelize;
 
   // Prevent direct instantiation
-  private constructor() {}
+  private constructor() { }
 
   /**
    * Returns the singleton Sequelize instance.
