@@ -4,11 +4,12 @@ import { AuthRequest } from '@shared/index';
 import { updateProfileSchema, createAddressSchema } from './user.validation';
 
 export class UserController {
-  constructor(private readonly userService: UserProfileService) {}
+  constructor(private readonly userService: UserProfileService) { }
 
   getProfile = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
       const userId = req.user!.user_id;
+      console.log("userId---->", userId)
       const profile = await this.userService.getProfile(userId);
       res.status(200).json({ success: true, data: profile?.toPublicJSON() || {} });
     } catch (error: any) {

@@ -11,19 +11,21 @@ export class DatabaseInitializer {
   static async initialize(db: Sequelize): Promise<void> {
     try {
       await db.query(`CREATE SCHEMA IF NOT EXISTS app;`);
+
+      await db.query(`SET search_path TO app;`);
       // 1. Enable UUID extension
       await db.query(`CREATE EXTENSION IF NOT EXISTS "pgcrypto";`);
 
       // 2. Auth Users Table (Identity only)
-      await db.query(`
-        CREATE TABLE IF NOT EXISTS "auth_users" (
-          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-          phone VARCHAR(20) UNIQUE NOT NULL,
-          role VARCHAR(20) NOT NULL DEFAULT 'customer',
-          created_at TIMESTAMPTZ DEFAULT NOW(),
-          updated_at TIMESTAMPTZ DEFAULT NOW()
-        );
-      `);
+      // await db.query(`
+      //   CREATE TABLE IF NOT EXISTS "auth_users" (
+      //     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      //     phone VARCHAR(20) UNIQUE NOT NULL,
+      //     role VARCHAR(20) NOT NULL DEFAULT 'customer',
+      //     created_at TIMESTAMPTZ DEFAULT NOW(),
+      //     updated_at TIMESTAMPTZ DEFAULT NOW()
+      //   );
+      // `);
 
       // 3. User Profiles Table (Customer Domain)
       // await db.query(`

@@ -10,6 +10,7 @@ export interface AddressProps {
   is_default: boolean;
   created_at?: Date | string;
   updated_at?: Date | string;
+  profilestage?: string | null | undefined;
 }
 
 export class Address {
@@ -22,6 +23,7 @@ export class Address {
   readonly state: string;
   readonly pincode: string;
   readonly isDefault: boolean;
+  readonly profilestage: string | null | undefined;
 
   constructor(data: AddressProps) {
     this.id = data.id;
@@ -33,5 +35,6 @@ export class Address {
     this.state = data.state;
     this.pincode = data.pincode;
     this.isDefault = data.is_default;
+    this.profilestage = data.profilestage;
   }
 }

@@ -6,6 +6,7 @@ export interface UserProfileProps {
   avatar_url: string | null;
   created_at?: Date | string;
   updated_at?: Date | string;
+  profilestage?: string | null | undefined;
 }
 
 export class UserProfile {
@@ -16,6 +17,7 @@ export class UserProfile {
   readonly avatarUrl: string | null;
   readonly createdAt: Date;
   readonly updatedAt: Date;
+  readonly profilestage: string | null | undefined;
 
   constructor(data: UserProfileProps) {
     this.id = data.id;
@@ -25,6 +27,7 @@ export class UserProfile {
     this.avatarUrl = data.avatar_url;
     this.createdAt = data.created_at ? new Date(data.created_at) : new Date();
     this.updatedAt = data.updated_at ? new Date(data.updated_at) : new Date();
+    this.profilestage = data.profilestage;
   }
 
   toPublicJSON() {
@@ -34,6 +37,7 @@ export class UserProfile {
       name: this.name,
       email: this.email,
       avatarUrl: this.avatarUrl,
+      profilestage: this.profilestage,
     };
   }
 }

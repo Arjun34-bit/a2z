@@ -12,7 +12,7 @@ export class AuthService implements IAuthService {
   constructor(
     private readonly userRepo: IAuthUserRepository,
     private readonly otpCache: IOtpCacheService,
-  ) {}
+  ) { }
 
   async sendOtp(phone: string): Promise<{ success: boolean; message: string }> {
     const attempts = await this.otpCache.getAttempts(phone);
@@ -33,7 +33,7 @@ export class AuthService implements IAuthService {
   async verifyOtp(phone: string, otp: string): Promise<{
     success: boolean;
     data: {
-      user: { id: string; phone: string; role: string };
+      user: { id: string; phone: string | null | undefined; role: string, profile_stage: string | null | undefined };
       tokens: { accessToken: string; refreshToken: string };
       isNewUser: boolean;
     };
@@ -50,19 +50,21 @@ export class AuthService implements IAuthService {
     // Find or create user
     let user = await this.userRepo.findByPhone(phone);
     let isNewUser = false;
+    console.log("user------->", user)
 
     if (!user) {
       isNewUser = true;
-      const creationData = AuthUser.createNewCustomer(phone);
+      const creationData = AuthUser.createNewUser(phone);
       user = await this.userRepo.create(creationData);
     }
 
+    // Generate tokens with user_id and role from the roles table
     const tokens = generateTokens({ user_id: user.id, role: user.role });
 
     return {
       success: true,
       data: {
-        user: { id: user.id, phone: user.phone, role: user.role },
+        user: { id: user.id, phone: user.phone, role: user.role, profile_stage: user.profilestage },
         tokens,
         isNewUser
       },

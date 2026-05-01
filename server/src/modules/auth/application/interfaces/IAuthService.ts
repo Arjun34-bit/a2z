@@ -3,9 +3,9 @@ export interface IAuthService {
   verifyOtp(phone: string, otp: string): Promise<{
     success: boolean;
     data: {
-      user: { id: string; phone: string; role: string };
+      user: { id: string; phone: string | null | undefined; role: string, profile_stage: string | null | undefined };
       tokens: { accessToken: string; refreshToken: string };
       isNewUser: boolean;
     };
   }>;
-}
+} 
