@@ -72,7 +72,20 @@ export class DatabaseInitializer {
       //   );
       // `);
 
-      console.log('Database schema set to app.');
+
+      // 8. Images Table (Upload Domain)
+      await db.query(`
+        CREATE TABLE IF NOT EXISTS app.images (
+          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+          url TEXT NOT NULL,
+          provider VARCHAR(50) NOT NULL,
+          provider_file_id VARCHAR(255) NOT NULL,
+          created_at TIMESTAMPTZ DEFAULT NOW(),
+          updated_at TIMESTAMPTZ DEFAULT NOW()
+        );
+      `);
+
+      console.log('Database schema initialized (app schema + tables).');
     } catch (error) {
       console.error('Error initializing database:', error);
     }

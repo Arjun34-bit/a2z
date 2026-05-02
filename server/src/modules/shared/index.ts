@@ -4,6 +4,7 @@
 
 // Infrastructure
 export { DatabaseInitializer } from './infrastructure/DatabaseInitializer';
+export { AdminSeeder } from './infrastructure/AdminSeeder';
 
 // Middlewares
 export { requireAuth } from './middlewares/requireAuth';

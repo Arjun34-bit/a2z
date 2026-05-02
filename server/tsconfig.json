@@ -15,7 +15,8 @@
       "@booking/*": ["modules/booking/*"],
       "@payment/*": ["modules/payment/*"],
       "@marketplace/*": ["modules/marketplace/*"],
-      "@notification/*": ["modules/notification/*"]
+      "@notification/*": ["modules/notification/*"],
+      "@upload/*": ["modules/upload/*"]
     },
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,

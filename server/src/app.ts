@@ -15,11 +15,14 @@ import { createArtistRoutes } from '@artist/index';
 import { AdminController } from '@admin/index';
 import { createAdminRoutes } from '@admin/index';
 
+import { UploadController, createUploadRoutes } from '@upload/index';
+
 export interface AppControllers {
   authController: AuthController;
   userController: UserController;
   artistController: ArtistController;
   adminController: AdminController;
+  uploadController: UploadController;
 }
 
 /**
@@ -45,6 +48,7 @@ export const createApp = (controllers: AppControllers): Application => {
   app.use('/api/v1/users', createUserRoutes(controllers.userController));
   app.use('/api/v1/artists', createArtistRoutes(controllers.artistController));
   app.use('/api/v1/admin', createAdminRoutes(controllers.adminController));
+  app.use('/api/v1/uploads', createUploadRoutes(controllers.uploadController));
 
   // Global Error Handler
   app.use((err: Error, req: Request, res: Response, next: NextFunction) => {

@@ -3,7 +3,7 @@ dotenv.config();
 
 import { Database } from '@infrastructure/Database';
 import { RedisClient } from '@infrastructure/RedisClient';
-import { DatabaseInitializer } from '@shared/index';
+import { DatabaseInitializer, AdminSeeder } from '@shared/index';
 
 // Auth Module
 import { AuthUserRepository, OtpCacheService, AuthService, AuthController } from '@auth/index';
@@ -16,6 +16,9 @@ import { ArtistRepository, ArtistService, ArtistController } from '@artist/index
 
 // Admin Module
 import { AdminRepository, AdminService, AdminController } from '@admin/index';
+
+// Upload Module
+import { StorageFactory, ImageRepository, ImageService, UploadController } from '@upload/index';
 
 import { createApp } from './app';
 
@@ -38,6 +41,9 @@ const startServer = async () => {
     // NOTE: This will create the new UUID tables (auth_users, user_profiles, etc)
     await DatabaseInitializer.initialize(db);
 
+    // 2b. Seed Superadmin (safe to run on every startup — skips if exists)
+    await AdminSeeder.seed(db);
+
     // 3. DI Wiring
     
     // Auth Module
@@ -57,9 +63,15 @@ const startServer = async () => {
     const artistService = new ArtistService(artistRepo);
     const artistController = new ArtistController(artistService);
 
+    // Upload Module
+    const storageProvider = StorageFactory.getProvider();
+    const imageRepo = new ImageRepository(db);
+    const imageService = new ImageService(storageProvider, imageRepo);
+    const uploadController = new UploadController(imageService);
+
     // Admin Module
     const adminRepo = new AdminRepository(db);
-    const adminService = new AdminService(adminRepo);
+    const adminService = new AdminService(adminRepo, imageService);
     const adminController = new AdminController(adminService);
 
     // 4. Create Express App
@@ -68,6 +80,7 @@ const startServer = async () => {
       userController,
       artistController,
       adminController,
+      uploadController,
     });
 
     // 5. Start Server
