@@ -1,14 +1,26 @@
 import { ArtistProfile } from '@artist/index';
 
 // ── Banner Types ──
+export interface BannerTargeting {
+  user_type?: string | null;
+  platform?: string | null;
+  country?: string | null;
+  state?: string | null;
+  min_app_version?: string | null;
+}
+
 export interface BannerCreateData {
   title: string;
-  image_url: string;
-  link_url?: string;
+  image_id?: string | null;
+  mobile_image_id?: string | null;
+  redirect_url?: string | null;
+  description?: string | null;
+  position?: string | null;
+  start_time?: string | null;
+  end_time?: string | null;
   is_active?: boolean;
-  display_order?: number;
-  starts_at?: string;
-  ends_at?: string;
+  priority?: number;
+  targeting?: BannerTargeting[];
 }
 
 export interface BannerUpdateData extends Partial<BannerCreateData> {}
@@ -16,14 +28,19 @@ export interface BannerUpdateData extends Partial<BannerCreateData> {}
 export interface BannerRow {
   banner_id: string;
   title: string;
-  image_url: string;
-  link_url: string | null;
+  image_url: string | null;
+  mobile_image_url: string | null;
+  redirect_url: string | null;
+  description: string | null;
+  position: string | null;
+  start_time: string | null;
+  end_time: string | null;
   is_active: boolean;
-  display_order: number;
-  starts_at: string | null;
-  ends_at: string | null;
+  is_deleted: boolean;
+  priority: number;
   created_at: string;
   updated_at: string;
+  targeting?: BannerTargeting[];
 }
 
 // ── Category Types ──

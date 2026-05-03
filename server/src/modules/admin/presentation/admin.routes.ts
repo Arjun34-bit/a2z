@@ -6,7 +6,7 @@ import multer from 'multer';
 // Use memory storage for multer
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+  limits: { fileSize: 6 * 1024 * 1024 }, // 5MB limit
 });
 
 export const createAdminRoutes = (controller: AdminController): Router => {
@@ -17,6 +17,10 @@ export const createAdminRoutes = (controller: AdminController): Router => {
 
   // ── Public: Get All Categories (no auth required) ──
   router.get('/categories', controller.getAllCategories);
+
+  // ── Public: Fetch Banners (no auth required) ──
+  router.get('/banners', controller.getAllBanners);
+  router.get('/banners/:bannerId', controller.getBannerById);
 
   // ── Protected: All routes below require auth + admin role ──
   router.use(requireAuth, requireRole('admin'));
@@ -29,10 +33,8 @@ export const createAdminRoutes = (controller: AdminController): Router => {
   router.get('/dashboard', controller.getDashboard);
 
   // Banners CRUD
-  router.post('/banners', controller.createBanner);
-  router.get('/banners', controller.getAllBanners);
-  router.get('/banners/:bannerId', controller.getBannerById);
-  router.put('/banners/:bannerId', controller.updateBanner);
+  router.post('/banners', upload.fields([{ name: 'image', maxCount: 1 }, { name: 'mobile_image', maxCount: 1 }]), controller.createBanner);
+  router.put('/banners/:bannerId', upload.fields([{ name: 'image', maxCount: 1 }, { name: 'mobile_image', maxCount: 1 }]), controller.updateBanner);
   router.delete('/banners/:bannerId', controller.deleteBanner);
 
   // Categories CRUD

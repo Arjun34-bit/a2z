@@ -16,6 +16,7 @@ import { AdminController } from '@admin/index';
 import { createAdminRoutes } from '@admin/index';
 
 import { UploadController, createUploadRoutes } from '@upload/index';
+import { errorHandler } from '@shared/index';
 
 export interface AppControllers {
   authController: AuthController;
@@ -51,10 +52,7 @@ export const createApp = (controllers: AppControllers): Application => {
   app.use('/api/v1/uploads', createUploadRoutes(controllers.uploadController));
 
   // Global Error Handler
-  app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
-    console.error(err.stack);
-    res.status(500).json({ success: false, message: 'Internal Server Error' });
-  });
+  app.use(errorHandler);
 
   return app;
 };

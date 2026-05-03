@@ -19,17 +19,9 @@ export class AdminController {
   // ────────────────────────────────────────────────
 
   login = async (req: Request, res: Response): Promise<void> => {
-    try {
-      const validated = adminLoginSchema.parse(req.body);
-      const result = await this.adminService.login(validated.email, validated.password);
-      res.status(200).json(result);
-    } catch (error: any) {
-      if (error.name === 'ZodError') {
-        res.status(400).json({ success: false, errors: error.errors });
-      } else {
-        res.status(401).json({ success: false, message: error.message });
-      }
-    }
+    const validated = adminLoginSchema.parse(req.body);
+    const result = await this.adminService.login(validated.email, validated.password);
+    res.status(200).json(result);
   };
 
   // ────────────────────────────────────────────────
@@ -37,35 +29,19 @@ export class AdminController {
   // ────────────────────────────────────────────────
 
   getPendingArtists = async (req: Request, res: Response): Promise<void> => {
-    try {
-      const artists = await this.adminService.getPendingArtists();
-      res.status(200).json({ success: true, data: artists.map(a => a.toPublicJSON()) });
-    } catch (error: any) {
-      res.status(500).json({ success: false, message: error.message });
-    }
+    const artists = await this.adminService.getPendingArtists();
+    res.status(200).json({ success: true, data: artists.map(a => a.toPublicJSON()) });
   };
 
   approveArtist = async (req: Request, res: Response): Promise<void> => {
-    try {
-      const validated = approveArtistSchema.parse(req.params);
-      const result = await this.adminService.approveArtist(validated.artistId);
-      res.status(200).json(result);
-    } catch (error: any) {
-      if (error.name === 'ZodError') {
-        res.status(400).json({ success: false, errors: error.errors });
-      } else {
-        res.status(404).json({ success: false, message: error.message });
-      }
-    }
+    const validated = approveArtistSchema.parse(req.params);
+    const result = await this.adminService.approveArtist(validated.artistId);
+    res.status(200).json(result);
   };
 
   getDashboard = async (req: Request, res: Response): Promise<void> => {
-    try {
-      const stats = await this.adminService.getDashboardStats();
-      res.status(200).json({ success: true, data: stats });
-    } catch (error: any) {
-      res.status(500).json({ success: false, message: error.message });
-    }
+    const stats = await this.adminService.getDashboardStats();
+    res.status(200).json({ success: true, data: stats });
   };
 
   // ────────────────────────────────────────────────
@@ -73,69 +49,41 @@ export class AdminController {
   // ────────────────────────────────────────────────
 
   createBanner = async (req: Request, res: Response): Promise<void> => {
-    try {
-      const validated = createBannerSchema.parse(req.body);
-      const banner = await this.adminService.createBanner(validated);
-      res.status(201).json({ success: true, data: banner });
-    } catch (error: any) {
-      if (error.name === 'ZodError') {
-        res.status(400).json({ success: false, errors: error.errors });
-      } else {
-        res.status(500).json({ success: false, message: error.message });
-      }
-    }
+    const validated = createBannerSchema.parse(req.body);
+    const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
+    const imageBuffer = files?.['image']?.[0]?.buffer;
+    const mobileImageBuffer = files?.['mobile_image']?.[0]?.buffer;
+    
+    const banner = await this.adminService.createBanner(validated, imageBuffer, mobileImageBuffer);
+    res.status(201).json({ success: true, data: banner });
   };
 
   getAllBanners = async (req: Request, res: Response): Promise<void> => {
-    try {
-      const banners = await this.adminService.getAllBanners();
-      res.status(200).json({ success: true, data: banners });
-    } catch (error: any) {
-      res.status(500).json({ success: false, message: error.message });
-    }
+    const banners = await this.adminService.getAllBanners();
+    res.status(200).json({ success: true, data: banners });
   };
 
   getBannerById = async (req: Request, res: Response): Promise<void> => {
-    try {
-      const { bannerId } = bannerIdParamSchema.parse(req.params);
-      const banner = await this.adminService.getBannerById(bannerId);
-      res.status(200).json({ success: true, data: banner });
-    } catch (error: any) {
-      if (error.name === 'ZodError') {
-        res.status(400).json({ success: false, errors: error.errors });
-      } else {
-        res.status(404).json({ success: false, message: error.message });
-      }
-    }
+    const { bannerId } = bannerIdParamSchema.parse(req.params);
+    const banner = await this.adminService.getBannerById(bannerId);
+    res.status(200).json({ success: true, data: banner });
   };
 
   updateBanner = async (req: Request, res: Response): Promise<void> => {
-    try {
-      const { bannerId } = bannerIdParamSchema.parse(req.params);
-      const validated = updateBannerSchema.parse(req.body);
-      const banner = await this.adminService.updateBanner(bannerId, validated);
-      res.status(200).json({ success: true, data: banner });
-    } catch (error: any) {
-      if (error.name === 'ZodError') {
-        res.status(400).json({ success: false, errors: error.errors });
-      } else {
-        res.status(404).json({ success: false, message: error.message });
-      }
-    }
+    const { bannerId } = bannerIdParamSchema.parse(req.params);
+    const validated = updateBannerSchema.parse(req.body);
+    const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
+    const imageBuffer = files?.['image']?.[0]?.buffer;
+    const mobileImageBuffer = files?.['mobile_image']?.[0]?.buffer;
+    
+    const banner = await this.adminService.updateBanner(bannerId, validated, imageBuffer, mobileImageBuffer);
+    res.status(200).json({ success: true, data: banner });
   };
 
   deleteBanner = async (req: Request, res: Response): Promise<void> => {
-    try {
-      const { bannerId } = bannerIdParamSchema.parse(req.params);
-      const result = await this.adminService.deleteBanner(bannerId);
-      res.status(200).json(result);
-    } catch (error: any) {
-      if (error.name === 'ZodError') {
-        res.status(400).json({ success: false, errors: error.errors });
-      } else {
-        res.status(404).json({ success: false, message: error.message });
-      }
-    }
+    const { bannerId } = bannerIdParamSchema.parse(req.params);
+    const result = await this.adminService.deleteBanner(bannerId);
+    res.status(200).json(result);
   };
 
   // ────────────────────────────────────────────────
@@ -143,68 +91,32 @@ export class AdminController {
   // ────────────────────────────────────────────────
 
   createCategory = async (req: Request, res: Response): Promise<void> => {
-    try {
-      const validated = createCategorySchema.parse(req.body);
-      const category = await this.adminService.createCategory(validated, req.file?.buffer);
-      res.status(201).json({ success: true, data: category });
-    } catch (error: any) {
-      if (error.name === 'ZodError') {
-        res.status(400).json({ success: false, errors: error.errors });
-      } else {
-        res.status(500).json({ success: false, message: error.message });
-      }
-    }
+    const validated = createCategorySchema.parse(req.body);
+    const category = await this.adminService.createCategory(validated, req.file?.buffer);
+    res.status(201).json({ success: true, data: category });
   };
 
   getAllCategories = async (req: Request, res: Response): Promise<void> => {
-    try {
-      const categories = await this.adminService.getAllCategories();
-      res.status(200).json({ success: true, data: categories });
-    } catch (error: any) {
-      res.status(500).json({ success: false, message: error.message });
-    }
+    const categories = await this.adminService.getAllCategories();
+    res.status(200).json({ success: true, data: categories });
   };
 
   getCategoryById = async (req: Request, res: Response): Promise<void> => {
-    try {
-      const { categoryId } = categoryIdParamSchema.parse(req.params);
-      const category = await this.adminService.getCategoryById(categoryId);
-      res.status(200).json({ success: true, data: category });
-    } catch (error: any) {
-      if (error.name === 'ZodError') {
-        res.status(400).json({ success: false, errors: error.errors });
-      } else {
-        res.status(404).json({ success: false, message: error.message });
-      }
-    }
+    const { categoryId } = categoryIdParamSchema.parse(req.params);
+    const category = await this.adminService.getCategoryById(categoryId);
+    res.status(200).json({ success: true, data: category });
   };
 
   updateCategory = async (req: Request, res: Response): Promise<void> => {
-    try {
-      const { categoryId } = categoryIdParamSchema.parse(req.params);
-      const validated = updateCategorySchema.parse(req.body);
-      const category = await this.adminService.updateCategory(categoryId, validated, req.file?.buffer);
-      res.status(200).json({ success: true, data: category });
-    } catch (error: any) {
-      if (error.name === 'ZodError') {
-        res.status(400).json({ success: false, errors: error.errors });
-      } else {
-        res.status(404).json({ success: false, message: error.message });
-      }
-    }
+    const { categoryId } = categoryIdParamSchema.parse(req.params);
+    const validated = updateCategorySchema.parse(req.body);
+    const category = await this.adminService.updateCategory(categoryId, validated, req.file?.buffer);
+    res.status(200).json({ success: true, data: category });
   };
 
   deleteCategory = async (req: Request, res: Response): Promise<void> => {
-    try {
-      const { categoryId } = categoryIdParamSchema.parse(req.params);
-      const result = await this.adminService.deleteCategory(categoryId);
-      res.status(200).json(result);
-    } catch (error: any) {
-      if (error.name === 'ZodError') {
-        res.status(400).json({ success: false, errors: error.errors });
-      } else {
-        res.status(404).json({ success: false, message: error.message });
-      }
-    }
+    const { categoryId } = categoryIdParamSchema.parse(req.params);
+    const result = await this.adminService.deleteCategory(categoryId);
+    res.status(200).json(result);
   };
 }

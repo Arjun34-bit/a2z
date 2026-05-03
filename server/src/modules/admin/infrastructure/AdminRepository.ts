@@ -79,71 +79,175 @@ export class AdminRepository implements IAdminRepository {
   // ────────────────────────────────────────────────
 
   async createBanner(data: BannerCreateData): Promise<BannerRow> {
-    const results: any[] = await this.db.query(
-      `INSERT INTO app.banners (title, image_url, link_url, is_active, display_order, starts_at, ends_at, created_at, updated_at)
-       VALUES (:title, :image_url, :link_url, :is_active, :display_order, :starts_at, :ends_at, NOW(), NOW())
-       RETURNING *`,
-      {
-        replacements: {
-          title: data.title,
-          image_url: data.image_url,
-          link_url: data.link_url || null,
-          is_active: data.is_active ?? true,
-          display_order: data.display_order ?? 0,
-          starts_at: data.starts_at || null,
-          ends_at: data.ends_at || null,
-        },
-        type: QueryTypes.INSERT,
+    const transaction = await this.db.transaction();
+    try {
+      const results: any[] = await this.db.query(
+        `INSERT INTO app.banners (title, image_id, mobile_image_id, redirect_url, description, position, start_time, end_time, is_active, priority, created_at, updated_at)
+         VALUES (:title, :image_id, :mobile_image_id, :redirect_url, :description, :position, :start_time, :end_time, :is_active, :priority, NOW(), NOW())
+         RETURNING *`,
+        {
+          replacements: {
+            title: data.title,
+            image_id: data.image_id || null,
+            mobile_image_id: data.mobile_image_id || null,
+            redirect_url: data.redirect_url || null,
+            description: data.description || null,
+            position: data.position || null,
+            start_time: data.start_time || null,
+            end_time: data.end_time || null,
+            is_active: data.is_active ?? true,
+            priority: data.priority ?? 0,
+          },
+          type: QueryTypes.INSERT,
+          transaction
+        }
+      );
+      const banner = (results as any)[0][0];
+
+      if (data.targeting && data.targeting.length > 0) {
+        for (const target of data.targeting) {
+          await this.db.query(
+            `INSERT INTO app.banner_targeting (banner_id, user_type, platform, country, state, min_app_version, created_at)
+             VALUES (:banner_id, :user_type, :platform, :country, :state, :min_app_version, NOW())`,
+            {
+              replacements: {
+                banner_id: banner.banner_id,
+                user_type: target.user_type || null,
+                platform: target.platform || null,
+                country: target.country || null,
+                state: target.state || null,
+                min_app_version: target.min_app_version || null,
+              },
+              type: QueryTypes.INSERT,
+              transaction
+            }
+          );
+        }
       }
-    );
-    return (results as any)[0][0];
+
+      await transaction.commit();
+      return this.findBannerById(banner.banner_id) as unknown as BannerRow;
+    } catch (error) {
+      await transaction.rollback();
+      throw error;
+    }
   }
 
   async findAllBanners(): Promise<BannerRow[]> {
-    return this.db.query(
-      `SELECT * FROM app.banners ORDER BY display_order ASC, created_at DESC`,
+    const banners: any[] = await this.db.query(
+      `SELECT b.*, 
+              i1.url AS image_url, 
+              i2.url AS mobile_image_url
+       FROM app.banners b
+       LEFT JOIN app.images i1 ON b.image_id = i1.id
+       LEFT JOIN app.images i2 ON b.mobile_image_id = i2.id
+       WHERE b.is_deleted = false
+       ORDER BY b.priority DESC, b.created_at DESC`,
       { type: QueryTypes.SELECT }
     );
+    
+    const targetingRules: any[] = await this.db.query(
+      `SELECT * FROM app.banner_targeting`,
+      { type: QueryTypes.SELECT }
+    );
+
+    banners.forEach(b => {
+      b.targeting = targetingRules.filter(t => t.banner_id === b.banner_id);
+    });
+
+    return banners;
   }
 
   async findBannerById(bannerId: string): Promise<BannerRow | null> {
     const results: any[] = await this.db.query(
-      `SELECT * FROM app.banners WHERE banner_id = :bannerId LIMIT 1`,
+      `SELECT b.*, 
+              i1.url AS image_url, 
+              i2.url AS mobile_image_url
+       FROM app.banners b
+       LEFT JOIN app.images i1 ON b.image_id = i1.id
+       LEFT JOIN app.images i2 ON b.mobile_image_id = i2.id
+       WHERE b.banner_id = :bannerId AND b.is_deleted = false
+       LIMIT 1`,
       { replacements: { bannerId }, type: QueryTypes.SELECT }
     );
-    return results.length > 0 ? results[0] : null;
+
+    if (results.length === 0) return null;
+    const banner = results[0];
+
+    const targetingRules: any[] = await this.db.query(
+      `SELECT * FROM app.banner_targeting WHERE banner_id = :bannerId`,
+      { replacements: { bannerId }, type: QueryTypes.SELECT }
+    );
+    banner.targeting = targetingRules;
+
+    return banner;
   }
 
   async updateBanner(bannerId: string, data: BannerUpdateData): Promise<BannerRow | null> {
-    // Build dynamic SET clause from provided fields
-    const fields: string[] = [];
-    const replacements: Record<string, any> = { bannerId };
+    const transaction = await this.db.transaction();
+    try {
+      const fields: string[] = [];
+      const replacements: Record<string, any> = { bannerId };
 
-    if (data.title !== undefined) { fields.push('title = :title'); replacements.title = data.title; }
-    if (data.image_url !== undefined) { fields.push('image_url = :image_url'); replacements.image_url = data.image_url; }
-    if (data.link_url !== undefined) { fields.push('link_url = :link_url'); replacements.link_url = data.link_url; }
-    if (data.is_active !== undefined) { fields.push('is_active = :is_active'); replacements.is_active = data.is_active; }
-    if (data.display_order !== undefined) { fields.push('display_order = :display_order'); replacements.display_order = data.display_order; }
-    if (data.starts_at !== undefined) { fields.push('starts_at = :starts_at'); replacements.starts_at = data.starts_at; }
-    if (data.ends_at !== undefined) { fields.push('ends_at = :ends_at'); replacements.ends_at = data.ends_at; }
+      if (data.title !== undefined) { fields.push('title = :title'); replacements.title = data.title; }
+      if (data.image_id !== undefined) { fields.push('image_id = :image_id'); replacements.image_id = data.image_id; }
+      if (data.mobile_image_id !== undefined) { fields.push('mobile_image_id = :mobile_image_id'); replacements.mobile_image_id = data.mobile_image_id; }
+      if (data.redirect_url !== undefined) { fields.push('redirect_url = :redirect_url'); replacements.redirect_url = data.redirect_url; }
+      if (data.description !== undefined) { fields.push('description = :description'); replacements.description = data.description; }
+      if (data.position !== undefined) { fields.push('position = :position'); replacements.position = data.position; }
+      if (data.start_time !== undefined) { fields.push('start_time = :start_time'); replacements.start_time = data.start_time; }
+      if (data.end_time !== undefined) { fields.push('end_time = :end_time'); replacements.end_time = data.end_time; }
+      if (data.is_active !== undefined) { fields.push('is_active = :is_active'); replacements.is_active = data.is_active; }
+      if (data.priority !== undefined) { fields.push('priority = :priority'); replacements.priority = data.priority; }
 
-    if (fields.length === 0) return this.findBannerById(bannerId);
+      if (fields.length > 0) {
+        fields.push('updated_at = NOW()');
+        await this.db.query(
+          `UPDATE app.banners SET ${fields.join(', ')} WHERE banner_id = :bannerId AND is_deleted = false RETURNING *`,
+          { replacements, type: QueryTypes.UPDATE, transaction }
+        );
+      }
 
-    fields.push('updated_at = NOW()');
+      if (data.targeting !== undefined) {
+        await this.db.query(
+          `DELETE FROM app.banner_targeting WHERE banner_id = :bannerId`,
+          { replacements: { bannerId }, type: QueryTypes.DELETE, transaction }
+        );
 
-    const results: any[] = await this.db.query(
-      `UPDATE app.banners SET ${fields.join(', ')} WHERE banner_id = :bannerId RETURNING *`,
-      { replacements, type: QueryTypes.UPDATE }
-    );
+        if (data.targeting.length > 0) {
+          for (const target of data.targeting) {
+            await this.db.query(
+              `INSERT INTO app.banner_targeting (banner_id, user_type, platform, country, state, min_app_version, created_at)
+               VALUES (:banner_id, :user_type, :platform, :country, :state, :min_app_version, NOW())`,
+              {
+                replacements: {
+                  banner_id: bannerId,
+                  user_type: target.user_type || null,
+                  platform: target.platform || null,
+                  country: target.country || null,
+                  state: target.state || null,
+                  min_app_version: target.min_app_version || null,
+                },
+                type: QueryTypes.INSERT,
+                transaction
+              }
+            );
+          }
+        }
+      }
 
-    const rows = (results as any)[0];
-    return rows && rows.length > 0 ? rows[0] : null;
+      await transaction.commit();
+      return this.findBannerById(bannerId);
+    } catch (error) {
+      await transaction.rollback();
+      throw error;
+    }
   }
 
   async deleteBanner(bannerId: string): Promise<boolean> {
     const result: any = await this.db.query(
-      `DELETE FROM app.banners WHERE banner_id = :bannerId`,
-      { replacements: { bannerId }, type: QueryTypes.DELETE }
+      `UPDATE app.banners SET is_deleted = true, updated_at = NOW() WHERE banner_id = :bannerId`,
+      { replacements: { bannerId }, type: QueryTypes.UPDATE }
     );
     return (result as any)?.rowCount > 0 || (Array.isArray(result) && (result[1] as any)?.rowCount > 0);
   }

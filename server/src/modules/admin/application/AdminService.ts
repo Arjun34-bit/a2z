@@ -9,7 +9,7 @@ import {
   CategoryRow,
 } from './interfaces/IAdminRepository';
 import { ArtistProfile } from '@artist/index';
-import { generateTokens } from '@shared/index';
+import { generateTokens, UnauthorizedError, NotFoundError } from '@shared/index';
 import { ImageService } from '@upload/index';
 
 export class AdminService {
@@ -32,12 +32,12 @@ export class AdminService {
     const admin = await this.adminRepo.findAdminByEmail(email);
 
     if (!admin) {
-      throw new Error('Invalid email or password.');
+      throw new UnauthorizedError('Invalid email or password.');
     }
 
     const isPasswordValid = await bcrypt.compare(password, admin.password_hash);
     if (!isPasswordValid) {
-      throw new Error('Invalid email or password.');
+      throw new UnauthorizedError('Invalid email or password.');
     }
 
     const tokens = generateTokens({ user_id: admin.user_id, role: admin.role_name });
@@ -68,7 +68,7 @@ export class AdminService {
   async approveArtist(artistId: string): Promise<{ success: boolean; message: string }> {
     const approved = await this.adminRepo.approveArtist(artistId);
     if (!approved) {
-      throw new Error('Artist not found or already approved.');
+      throw new NotFoundError('Artist not found or already approved.');
     }
     return { success: true, message: 'Artist approved successfully.' };
   }
@@ -81,7 +81,15 @@ export class AdminService {
   // Banners
   // ────────────────────────────────────────────────
 
-  async createBanner(data: BannerCreateData): Promise<BannerRow> {
+  async createBanner(data: BannerCreateData, imageBuffer?: Buffer, mobileImageBuffer?: Buffer): Promise<BannerRow> {
+    if (imageBuffer) {
+      const imageMeta = await this.imageService.upload(imageBuffer, 'a2z_banners');
+      data.image_id = imageMeta.id;
+    }
+    if (mobileImageBuffer) {
+      const mobileImageMeta = await this.imageService.upload(mobileImageBuffer, 'a2z_banners');
+      data.mobile_image_id = mobileImageMeta.id;
+    }
     return this.adminRepo.createBanner(data);
   }
 
@@ -92,15 +100,23 @@ export class AdminService {
   async getBannerById(bannerId: string): Promise<BannerRow> {
     const banner = await this.adminRepo.findBannerById(bannerId);
     if (!banner) {
-      throw new Error('Banner not found.');
+      throw new NotFoundError('Banner not found.');
     }
     return banner;
   }
 
-  async updateBanner(bannerId: string, data: BannerUpdateData): Promise<BannerRow> {
+  async updateBanner(bannerId: string, data: BannerUpdateData, imageBuffer?: Buffer, mobileImageBuffer?: Buffer): Promise<BannerRow> {
+    if (imageBuffer) {
+      const imageMeta = await this.imageService.upload(imageBuffer, 'a2z_banners');
+      data.image_id = imageMeta.id;
+    }
+    if (mobileImageBuffer) {
+      const mobileImageMeta = await this.imageService.upload(mobileImageBuffer, 'a2z_banners');
+      data.mobile_image_id = mobileImageMeta.id;
+    }
     const banner = await this.adminRepo.updateBanner(bannerId, data);
     if (!banner) {
-      throw new Error('Banner not found.');
+      throw new NotFoundError('Banner not found.');
     }
     return banner;
   }
@@ -108,7 +124,7 @@ export class AdminService {
   async deleteBanner(bannerId: string): Promise<{ success: boolean; message: string }> {
     const deleted = await this.adminRepo.deleteBanner(bannerId);
     if (!deleted) {
-      throw new Error('Banner not found.');
+      throw new NotFoundError('Banner not found.');
     }
     return { success: true, message: 'Banner deleted successfully.' };
   }
@@ -132,7 +148,7 @@ export class AdminService {
   async getCategoryById(categoryId: string): Promise<CategoryRow> {
     const category = await this.adminRepo.findCategoryById(categoryId);
     if (!category) {
-      throw new Error('Category not found.');
+      throw new NotFoundError('Category not found.');
     }
     return category;
   }
@@ -144,7 +160,7 @@ export class AdminService {
     }
     const category = await this.adminRepo.updateCategory(categoryId, data);
     if (!category) {
-      throw new Error('Category not found.');
+      throw new NotFoundError('Category not found.');
     }
     return category;
   }
@@ -152,7 +168,7 @@ export class AdminService {
   async deleteCategory(categoryId: string): Promise<{ success: boolean; message: string }> {
     const deleted = await this.adminRepo.deleteCategory(categoryId);
     if (!deleted) {
-      throw new Error('Category not found.');
+      throw new NotFoundError('Category not found.');
     }
     return { success: true, message: 'Category deleted successfully.' };
   }

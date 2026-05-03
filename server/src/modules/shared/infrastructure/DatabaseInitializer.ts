@@ -85,6 +85,52 @@ export class DatabaseInitializer {
         );
       `);
 
+      // 9. Banner Positions
+      await db.query(`
+        CREATE TABLE IF NOT EXISTS app.banner_positions ( 
+            position_id VARCHAR(50) PRIMARY KEY, 
+            description TEXT 
+        );
+      `);
+
+      // 10. Banners
+      await db.query(`
+        CREATE TABLE IF NOT EXISTS app.banners ( 
+            banner_id UUID DEFAULT gen_random_uuid() PRIMARY KEY, 
+            title VARCHAR(255), 
+            image_id UUID REFERENCES app.images(id) ON DELETE SET NULL,
+            mobile_image_id UUID REFERENCES app.images(id) ON DELETE SET NULL,
+            redirect_url TEXT, 
+            description TEXT, 
+            position VARCHAR(50) REFERENCES app.banner_positions(position_id) ON DELETE SET NULL, 
+            start_time TIMESTAMPTZ, 
+            end_time TIMESTAMPTZ, 
+            is_active BOOLEAN DEFAULT true, 
+            is_deleted BOOLEAN DEFAULT false, 
+            priority INT DEFAULT 0, 
+            created_at TIMESTAMPTZ DEFAULT NOW(), 
+            updated_at TIMESTAMPTZ DEFAULT NOW() 
+        );
+        CREATE INDEX IF NOT EXISTS idx_banners_active_time ON app.banners (is_active, start_time, end_time); 
+        CREATE INDEX IF NOT EXISTS idx_banners_image_id ON app.banners (image_id); 
+        CREATE INDEX IF NOT EXISTS idx_banners_mobile_image_id ON app.banners (mobile_image_id); 
+      `);
+
+      // 11. Banner Targeting
+      await db.query(`
+        CREATE TABLE IF NOT EXISTS app.banner_targeting ( 
+            id UUID DEFAULT gen_random_uuid() PRIMARY KEY, 
+            banner_id UUID REFERENCES app.banners(banner_id) ON DELETE CASCADE, 
+            user_type VARCHAR(50), 
+            platform VARCHAR(50), 
+            country VARCHAR(50), 
+            state VARCHAR(50), 
+            min_app_version VARCHAR(20), 
+            created_at TIMESTAMPTZ DEFAULT NOW() 
+        );
+        CREATE INDEX IF NOT EXISTS idx_banner_targeting_banner ON app.banner_targeting (banner_id);
+      `);
+
       console.log('Database schema initialized (app schema + tables).');
     } catch (error) {
       console.error('Error initializing database:', error);
