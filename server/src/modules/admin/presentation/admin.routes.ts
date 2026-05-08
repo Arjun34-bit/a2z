@@ -28,6 +28,7 @@ export const createAdminRoutes = (controller: AdminController): Router => {
   // Artists
   router.get('/artists/pending', controller.getPendingArtists);
   router.patch('/artists/:artistId/approve', controller.approveArtist);
+  router.patch('/artists/:artistId/reject',  controller.rejectArtist);
 
   // Dashboard
   router.get('/dashboard', controller.getDashboard);

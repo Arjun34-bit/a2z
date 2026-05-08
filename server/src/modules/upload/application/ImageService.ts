@@ -13,7 +13,7 @@ export class ImageService {
    * @param folder Optional folder name in the storage provider.
    * @returns The saved image metadata.
    */
-  async upload(fileBuffer: Buffer, folder?: string): Promise<ImageMetadata> {
+  async upload(fileBuffer: Buffer, folder?: string, imageType?: string): Promise<ImageMetadata> {
     // 1. Upload to storage provider
     const { url, id: provider_file_id } = await this.storageProvider.upload(fileBuffer, { folder });
 
@@ -25,6 +25,7 @@ export class ImageService {
       url,
       provider: providerName,
       provider_file_id,
+      image_type: imageType || null,
     };
 
     return this.imageRepository.save(imageMetadata);

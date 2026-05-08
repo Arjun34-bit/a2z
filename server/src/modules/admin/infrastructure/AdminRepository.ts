@@ -9,7 +9,7 @@ import {
   CategoryUpdateData,
   CategoryRow,
 } from '../application/interfaces/IAdminRepository';
-import { ArtistProfile } from '@artist/index';
+import { ArtistProfileRow } from '@artist/index';
 
 export class AdminRepository implements IAdminRepository {
   constructor(private readonly db: Sequelize) {}
@@ -36,20 +36,32 @@ export class AdminRepository implements IAdminRepository {
   // Artists
   // ────────────────────────────────────────────────
 
-  async findPendingArtists(): Promise<ArtistProfile[]> {
+  async findPendingArtists(): Promise<ArtistProfileRow[]> {
     const results: any[] = await this.db.query(
-      `SELECT * FROM app.artist_profiles WHERE is_verified = false ORDER BY created_at ASC`,
+      `SELECT * FROM app.artist_profiles WHERE onboarding_status = 'pending_review' ORDER BY created_at ASC`,
       { type: QueryTypes.SELECT }
     );
-    return results.map(row => new ArtistProfile(row));
+    return results;
   }
 
   async approveArtist(artistId: string): Promise<boolean> {
-    const [_, metadata] = await this.db.query(
-      `UPDATE app.artist_profiles SET is_verified = true, updated_at = NOW() WHERE id = :artistId`,
+    const result: any = await this.db.query(
+      `UPDATE app.artist_profiles
+       SET onboarding_status = 'approved', verification_tier = 'basic', updated_at = NOW()
+       WHERE artist_id = :artistId AND onboarding_status = 'pending_review'`,
       { replacements: { artistId }, type: QueryTypes.UPDATE }
     );
-    return (metadata as any).rowCount > 0;
+    return (result[1] as any)?.rowCount > 0;
+  }
+
+  async rejectArtist(artistId: string): Promise<boolean> {
+    const result: any = await this.db.query(
+      `UPDATE app.artist_profiles
+       SET onboarding_status = 'rejected', updated_at = NOW()
+       WHERE artist_id = :artistId AND onboarding_status IN ('pending_review', 'draft')`,
+      { replacements: { artistId }, type: QueryTypes.UPDATE }
+    );
+    return (result[1] as any)?.rowCount > 0;
   }
 
   async getDashboardStats(): Promise<{
@@ -58,18 +70,17 @@ export class AdminRepository implements IAdminRepository {
     pendingApprovals: number;
   }> {
     const results: any[] = await this.db.query(
-      `SELECT 
+      `SELECT
         (SELECT COUNT(*) FROM app.users) as "totalUsers",
-        (SELECT COUNT(*) FROM app.artist_profiles WHERE is_verified = true) as "totalArtists",
-        (SELECT COUNT(*) FROM app.artist_profiles WHERE is_verified = false) as "pendingApprovals"
+        (SELECT COUNT(*) FROM app.artist_profiles WHERE onboarding_status = 'approved') as "totalArtists",
+        (SELECT COUNT(*) FROM app.artist_profiles WHERE onboarding_status = 'pending_review') as "pendingApprovals"
       `,
       { type: QueryTypes.SELECT }
     );
-
     const row = results[0];
     return {
-      totalUsers: parseInt(row.totalUsers, 10),
-      totalArtists: parseInt(row.totalArtists, 10),
+      totalUsers:       parseInt(row.totalUsers, 10),
+      totalArtists:     parseInt(row.totalArtists, 10),
       pendingApprovals: parseInt(row.pendingApprovals, 10),
     };
   }

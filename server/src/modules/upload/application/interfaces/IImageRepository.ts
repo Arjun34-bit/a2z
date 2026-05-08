@@ -3,6 +3,7 @@ export interface ImageMetadata {
   url: string;
   provider: string;
   provider_file_id: string;
+  image_type?: string | null;
   created_at?: string;
   updated_at?: string;
 }

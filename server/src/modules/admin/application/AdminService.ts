@@ -8,7 +8,7 @@ import {
   CategoryUpdateData,
   CategoryRow,
 } from './interfaces/IAdminRepository';
-import { ArtistProfile } from '@artist/index';
+import { ArtistProfileRow } from '@artist/index';
 import { generateTokens, UnauthorizedError, NotFoundError } from '@shared/index';
 import { ImageService } from '@upload/index';
 
@@ -61,16 +61,24 @@ export class AdminService {
   // Artists
   // ────────────────────────────────────────────────
 
-  async getPendingArtists(): Promise<ArtistProfile[]> {
+  async getPendingArtists(): Promise<ArtistProfileRow[]> {
     return this.adminRepo.findPendingArtists();
   }
 
   async approveArtist(artistId: string): Promise<{ success: boolean; message: string }> {
     const approved = await this.adminRepo.approveArtist(artistId);
     if (!approved) {
-      throw new NotFoundError('Artist not found or already approved.');
+      throw new NotFoundError('Artist not found or not in pending_review status.');
     }
     return { success: true, message: 'Artist approved successfully.' };
+  }
+
+  async rejectArtist(artistId: string): Promise<{ success: boolean; message: string }> {
+    const rejected = await this.adminRepo.rejectArtist(artistId);
+    if (!rejected) {
+      throw new NotFoundError('Artist not found or already processed.');
+    }
+    return { success: true, message: 'Artist rejected.' };
   }
 
   async getDashboardStats() {

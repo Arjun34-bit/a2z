@@ -58,16 +58,16 @@ const startServer = async () => {
     const userProfileService = new UserProfileService(userProfileRepo, addressRepo);
     const userController = new UserController(userProfileService);
 
-    // Artist Module
-    const artistRepo = new ArtistRepository(db);
-    const artistService = new ArtistService(artistRepo);
-    const artistController = new ArtistController(artistService);
-
-    // Upload Module
+    // Upload Module (must be wired before Artist + Admin modules that depend on imageService)
     const storageProvider = StorageFactory.getProvider();
     const imageRepo = new ImageRepository(db);
     const imageService = new ImageService(storageProvider, imageRepo);
     const uploadController = new UploadController(imageService);
+
+    // Artist Module
+    const artistRepo = new ArtistRepository(db);
+    const artistService = new ArtistService(artistRepo, imageService);
+    const artistController = new ArtistController(artistService);
 
     // Admin Module
     const adminRepo = new AdminRepository(db);

@@ -1,4 +1,4 @@
-import { ArtistProfile } from '@artist/index';
+import { ArtistProfileRow } from '@artist/index';
 
 // ── Banner Types ──
 export interface BannerTargeting {
@@ -84,8 +84,9 @@ export interface IAdminRepository {
   findAdminByEmail(email: string): Promise<AdminLoginResult | null>;
 
   // ── Artists ──
-  findPendingArtists(): Promise<ArtistProfile[]>;
+  findPendingArtists(): Promise<ArtistProfileRow[]>;
   approveArtist(artistId: string): Promise<boolean>;
+  rejectArtist(artistId: string): Promise<boolean>;
   getDashboardStats(): Promise<{
     totalUsers: number;
     totalArtists: number;

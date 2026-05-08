@@ -6,14 +6,15 @@ export class ImageRepository implements IImageRepository {
 
   async save(metadata: ImageMetadata): Promise<ImageMetadata> {
     const results: any[] = await this.db.query(
-      `INSERT INTO app.images (url, provider, provider_file_id, created_at, updated_at)
-       VALUES (:url, :provider, :provider_file_id, NOW(), NOW())
+      `INSERT INTO app.images (url, provider, provider_file_id, image_type, created_at, updated_at)
+       VALUES (:url, :provider, :provider_file_id, :image_type, NOW(), NOW())
        RETURNING *`,
       {
         replacements: {
           url: metadata.url,
           provider: metadata.provider,
           provider_file_id: metadata.provider_file_id,
+          image_type: metadata.image_type || null,
         },
         type: QueryTypes.INSERT,
       }

@@ -30,12 +30,18 @@ export class AdminController {
 
   getPendingArtists = async (req: Request, res: Response): Promise<void> => {
     const artists = await this.adminService.getPendingArtists();
-    res.status(200).json({ success: true, data: artists.map(a => a.toPublicJSON()) });
+    res.status(200).json({ success: true, data: artists });
   };
 
   approveArtist = async (req: Request, res: Response): Promise<void> => {
-    const validated = approveArtistSchema.parse(req.params);
-    const result = await this.adminService.approveArtist(validated.artistId);
+    const { artistId } = approveArtistSchema.parse(req.params);
+    const result = await this.adminService.approveArtist(artistId);
+    res.status(200).json(result);
+  };
+
+  rejectArtist = async (req: Request, res: Response): Promise<void> => {
+    const { artistId } = approveArtistSchema.parse(req.params);
+    const result = await this.adminService.rejectArtist(artistId);
     res.status(200).json(result);
   };
 
