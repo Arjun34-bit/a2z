@@ -1,6 +1,6 @@
 export interface IAuthService {
   sendOtp(phone: string): Promise<{ success: boolean; message: string }>;
-  verifyOtp(phone: string, otp: string): Promise<{
+  verifyOtp(phone: string, otp: string, role?: string): Promise<{
     success: boolean;
     data: {
       user: { id: string; phone: string | null | undefined; role: string, profile_stage: string | null | undefined };

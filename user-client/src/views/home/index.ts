@@ -1,0 +1,9 @@
+export { HomeHeader } from "./components/HomeHeader";
+export { SearchBar } from "./components/SearchBar";
+export { PopularServices } from "./components/PopularServices";
+export { PopularNearYou } from "./components/PopularNearYou";
+export { PromoBanner } from "./components/PromoBanner";
+export { DesktopHeader } from "./components/DesktopHeader";
+export { DesktopHero } from "./components/DesktopHero";
+export { DesktopCategories } from "./components/DesktopCategories";
+export { DesktopBanner } from "./components/DesktopBanner";

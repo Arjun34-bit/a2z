@@ -1,0 +1,686 @@
+{
+    "info": {
+        "_postman_id": "a2z-artist-onboarding-v1",
+        "name": "A2Z — Artist Onboarding",
+        "description": "Full progressive onboarding flow for solo artists and parlour organisations.\n\nStep map:\n  1 → type_selection\n  2 → basic_info\n  3 → [RESERVED: services]\n  4 → identity_verify (solo + parlour owner only)\n  5 → portfolio\n  → submit → pending_review\n\nSet {{artistToken}} and {{adminToken}} before running.",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "variable": [
+        {
+            "key": "baseUrl",
+            "value": "http://localhost:8000/api/v1",
+            "type": "string"
+        },
+        {
+            "key": "artistToken",
+            "value": "<paste_artist_jwt_here>",
+            "type": "string"
+        },
+        {
+            "key": "adminToken",
+            "value": "<paste_admin_jwt_here>",
+            "type": "string"
+        },
+        {
+            "key": "artistId",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "subUserId",
+            "value": "<uuid_of_sub_artist_user>",
+            "type": "string"
+        }
+    ],
+    "item": [
+        {
+            "name": "🎨 Artist Onboarding",
+            "item": [
+                {
+                    "name": "Step 0 — Start Onboarding",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{artistToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/artists/onboarding/start",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "artists",
+                                "onboarding",
+                                "start"
+                            ]
+                        },
+                        "description": "Idempotent. Creates artist_profile + step tracker if they don't exist. Safe to call multiple times."
+                    },
+                    "response": [
+                        {
+                            "name": "201 — Profile Created",
+                            "status": "Created",
+                            "code": 201,
+                            "body": "{\n  \"success\": true,\n  \"data\": {\n    \"profile\": {\n      \"artist_id\": \"b1c2d3e4-...\",\n      \"org_id\": null,\n      \"full_name\": null,\n      \"onboarding_status\": \"draft\"\n    },\n    \"steps\": {\n      \"current_step\": 1,\n      \"steps_completed\": []\n    }\n  }\n}"
+                        }
+                    ],
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "var json = pm.response.json();",
+                                    "if (json.data && json.data.profile) {",
+                                    "  pm.collectionVariables.set('artistId', json.data.profile.artist_id);",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "Step 1 — Set Artist Type (Solo)",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{artistToken}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"org_type\": \"solo\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/artists/onboarding/type",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "artists",
+                                "onboarding",
+                                "type"
+                            ]
+                        },
+                        "description": "Creates an organization shell with org_type='solo'. Artist is added as 'owner' in organization_members. Advances to step 1."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Step 1 — Set Artist Type (Parlour)",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{artistToken}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"org_type\": \"parlor\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/artists/onboarding/type",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "artists",
+                                "onboarding",
+                                "type"
+                            ]
+                        },
+                        "description": "Creates an organization shell with org_type='parlor'. Parlour owners can later add up to 4 sub-artists."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Step 2 — Basic Info (Solo)",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{artistToken}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"full_name\": \"Priya Sharma\",\n  \"display_name\": \"Priya Glam\",\n  \"city\": \"Mumbai\",\n  \"locality\": \"Andheri West\",\n  \"bio\": \"Professional makeup artist with 5+ years of experience in bridal and editorial looks.\",\n  \"experience_years\": 5\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/artists/profile",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "artists",
+                                "profile"
+                            ]
+                        },
+                        "description": "Required for solo: full_name, city, locality. Updates the org name to the artist's full_name automatically."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Step 2 — Basic Info (Parlour)",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{artistToken}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"full_name\": \"Rahul Gupta\",\n  \"city\": \"Delhi\",\n  \"locality\": \"Lajpat Nagar\",\n  \"parlor_name\": \"Glamour Studio\",\n  \"gstin\": \"07AABCU9603R1ZP\",\n  \"address\": \"12, Main Market, Lajpat Nagar II, New Delhi - 110024\",\n  \"bio\": \"Award-winning beauty studio offering bridal, party, and grooming services.\",\n  \"experience_years\": 8\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/artists/profile",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "artists",
+                                "profile"
+                            ]
+                        },
+                        "description": "Required for parlour: full_name, city, locality + parlor_name, gstin (15-char Indian GSTIN format), address."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Step 2b — Upload Profile Image",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{artistToken}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "image",
+                                    "type": "file",
+                                    "src": [],
+                                    "description": "JPEG/PNG profile photo. Max 8MB."
+                                }
+                            ]
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/artists/profile/image",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "artists",
+                                "profile",
+                                "image"
+                            ]
+                        },
+                        "description": "Uploads image to cloud storage, saves metadata in app.images, and links to artist_profiles.profile_image_id.\n\nContent-Type: multipart/form-data\nField name: image"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Step 4 — Submit Identity Verification",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{artistToken}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "document_type",
+                                    "value": "aadhaar",
+                                    "type": "text",
+                                    "description": "Allowed: aadhaar, pan, passport, voter_id"
+                                },
+                                {
+                                    "key": "document_number",
+                                    "value": "9876 5432 1012",
+                                    "type": "text",
+                                    "description": "Full document number (will be hashed; only last 4 stored)"
+                                },
+                                {
+                                    "key": "document",
+                                    "type": "file",
+                                    "src": [],
+                                    "description": "Photo of the identity document. Max 8MB."
+                                }
+                            ]
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/artists/identity/verify",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "artists",
+                                "identity",
+                                "verify"
+                            ]
+                        },
+                        "description": "Solo artists and parlour owners only. Sub-artists will receive 403.\n\nDocument number is SHA-256 hashed before storage. For Aadhaar, last 4 digits stored in aadhaar_last4.\nSets kyc_status = 'pending'."
+                    },
+                    "response": [
+                        {
+                            "name": "200 — Submitted",
+                            "status": "OK",
+                            "code": 200,
+                            "body": "{\n  \"success\": true,\n  \"data\": {\n    \"success\": true,\n    \"message\": \"Identity verification submitted. Pending review.\"\n  }\n}"
+                        },
+                        {
+                            "name": "403 — Sub-artist blocked",
+                            "status": "Forbidden",
+                            "code": 403,
+                            "body": "{\n  \"success\": false,\n  \"message\": \"Sub-artists do not require identity verification.\"\n}"
+                        }
+                    ]
+                },
+                {
+                    "name": "Step 5 — Add Portfolio Image",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{artistToken}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "image",
+                                    "type": "file",
+                                    "src": [],
+                                    "description": "Portfolio image. Max 8MB."
+                                },
+                                {
+                                    "key": "category",
+                                    "value": "bridal",
+                                    "type": "text",
+                                    "description": "e.g. bridal, party, editorial, grooming, nail_art"
+                                }
+                            ]
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/artists/portfolio",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "artists",
+                                "portfolio"
+                            ]
+                        },
+                        "description": "Call this at least 5 times. Minimum 5 portfolio images are required before submission.\n\nEach call uploads the image to cloud storage and inserts a row into app.artist_portfolios."
+                    },
+                    "response": [
+                        {
+                            "name": "201 — Image Added",
+                            "status": "Created",
+                            "code": 201,
+                            "body": "{\n  \"success\": true,\n  \"data\": {\n    \"id\": \"uuid\",\n    \"artist_id\": \"uuid\",\n    \"image_id\": \"uuid\",\n    \"image_url\": \"https://res.cloudinary.com/...\",\n    \"category\": \"bridal\",\n    \"sort_order\": 0,\n    \"moderation_status\": \"pending\"\n  }\n}"
+                        }
+                    ]
+                },
+                {
+                    "name": "Step 5b — Get Portfolio",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{artistToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/artists/portfolio",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "artists",
+                                "portfolio"
+                            ]
+                        },
+                        "description": "Returns all active portfolio images for the authenticated artist, ordered by sort_order ASC."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Final — Check Onboarding Status",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{artistToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/artists/onboarding/status",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "artists",
+                                "onboarding",
+                                "status"
+                            ]
+                        },
+                        "description": "Returns current step, onboarding_status, and a list of missing requirements.\n\nUse readyToSubmit = true as the signal that the artist can proceed to submit."
+                    },
+                    "response": [
+                        {
+                            "name": "200 — Ready to Submit",
+                            "status": "OK",
+                            "code": 200,
+                            "body": "{\n  \"success\": true,\n  \"data\": {\n    \"onboardingStatus\": \"draft\",\n    \"orgType\": \"solo\",\n    \"isSubArtist\": false,\n    \"steps\": {\n      \"currentStep\": 5,\n      \"stepsCompleted\": [1, 2, 4, 5]\n    },\n    \"missingRequirements\": [],\n    \"readyToSubmit\": true\n  }\n}"
+                        },
+                        {
+                            "name": "200 — Missing Requirements",
+                            "status": "OK",
+                            "code": 200,
+                            "body": "{\n  \"success\": true,\n  \"data\": {\n    \"onboardingStatus\": \"draft\",\n    \"orgType\": \"solo\",\n    \"isSubArtist\": false,\n    \"steps\": {\n      \"currentStep\": 2,\n      \"stepsCompleted\": [1, 2]\n    },\n    \"missingRequirements\": [\n      \"profile_image_id\",\n      \"portfolio_images (2/5)\",\n      \"identity_verification\"\n    ],\n    \"readyToSubmit\": false\n  }\n}"
+                        }
+                    ]
+                },
+                {
+                    "name": "Final — Submit Onboarding",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{artistToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/artists/onboarding/submit",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "artists",
+                                "onboarding",
+                                "submit"
+                            ]
+                        },
+                        "description": "Validates all requirements and sets onboarding_status = 'pending_review'.\n\nWill return 422 with a missing[] array if requirements are not met."
+                    },
+                    "response": [
+                        {
+                            "name": "200 — Submitted",
+                            "status": "OK",
+                            "code": 200,
+                            "body": "{\n  \"success\": true,\n  \"message\": \"Onboarding submitted successfully. Your profile is pending review.\"\n}"
+                        },
+                        {
+                            "name": "422 — Validation Failed",
+                            "status": "Unprocessable Entity",
+                            "code": 422,
+                            "body": "{\n  \"success\": false,\n  \"message\": \"Cannot submit onboarding. Missing requirements.\",\n  \"errors\": {\n    \"missing\": [\n      \"profile_image_id\",\n      \"portfolio_images (have 3, need 5)\",\n      \"identity_verification\"\n    ]\n  }\n}"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "🏢 Parlour — Sub-Artist Management",
+            "description": "Only available to parlour owners (org_type = 'parlor'). Max 4 sub-artists per organisation.",
+            "item": [
+                {
+                    "name": "Add Sub-Artist",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{artistToken}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"user_id\": \"{{subUserId}}\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/artists/sub-artists",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "artists",
+                                "sub-artists"
+                            ]
+                        },
+                        "description": "Sub-artist must already have a registered user account (user_id must exist in app.users).\n\nOn success:\n- Creates artist_profiles for the sub-artist (if not exists)\n- Links them to the parlour's org\n- Marks them as role='member' in organization_members\n- Skips step 1 (type selection) automatically\n- Sub-artist will NOT need identity verification (step 4 is skipped for them)\n\nErrors:\n- 403 if org_type is not 'parlor'\n- 409 if 4 sub-artists already exist\n- 400 if user_id is self"
+                    },
+                    "response": [
+                        {
+                            "name": "201 — Sub-artist Added",
+                            "status": "Created",
+                            "code": 201,
+                            "body": "{\n  \"success\": true,\n  \"data\": {\n    \"artist_id\": \"sub-artist-uuid\",\n    \"org_id\": \"parlour-org-uuid\",\n    \"onboarding_status\": \"draft\"\n  }\n}"
+                        },
+                        {
+                            "name": "403 — Not a Parlour",
+                            "status": "Forbidden",
+                            "code": 403,
+                            "body": "{\n  \"success\": false,\n  \"message\": \"Only parlor organisations can add sub-artists.\"\n}"
+                        },
+                        {
+                            "name": "409 — Cap Reached",
+                            "status": "Conflict",
+                            "code": 409,
+                            "body": "{\n  \"success\": false,\n  \"message\": \"Maximum of 4 sub-artists allowed per organisation.\"\n}"
+                        }
+                    ]
+                },
+                {
+                    "name": "Get Sub-Artists",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{artistToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/artists/sub-artists",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "artists",
+                                "sub-artists"
+                            ]
+                        },
+                        "description": "Lists all members of the parlour's organisation (role='member'). Owners appear first."
+                    },
+                    "response": [
+                        {
+                            "name": "200 — Members List",
+                            "status": "OK",
+                            "code": 200,
+                            "body": "{\n  \"success\": true,\n  \"data\": [\n    {\n      \"org_id\": \"parlour-org-uuid\",\n      \"user_id\": \"sub-artist-uuid-1\",\n      \"role\": \"member\",\n      \"full_name\": \"Sneha Kapoor\",\n      \"profile_image_id\": null,\n      \"onboarding_status\": \"draft\"\n    },\n    {\n      \"org_id\": \"parlour-org-uuid\",\n      \"user_id\": \"sub-artist-uuid-2\",\n      \"role\": \"member\",\n      \"full_name\": \"Kavya Nair\",\n      \"profile_image_id\": \"img-uuid\",\n      \"onboarding_status\": \"pending_review\"\n    }\n  ]\n}"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "🛡️ Admin — Artist Approvals",
+            "description": "Requires admin JWT. Use the admin login endpoint to get a token first.",
+            "item": [
+                {
+                    "name": "Get Pending Artists",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{adminToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/admin/artists/pending",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "artists",
+                                "pending"
+                            ]
+                        },
+                        "description": "Returns all artist profiles with onboarding_status = 'pending_review', ordered oldest first."
+                    },
+                    "response": [
+                        {
+                            "name": "200 — Pending List",
+                            "status": "OK",
+                            "code": 200,
+                            "body": "{\n  \"success\": true,\n  \"data\": [\n    {\n      \"artist_id\": \"uuid\",\n      \"org_id\": \"uuid\",\n      \"full_name\": \"Priya Sharma\",\n      \"city\": \"Mumbai\",\n      \"locality\": \"Andheri West\",\n      \"onboarding_status\": \"pending_review\",\n      \"verification_tier\": \"none\",\n      \"created_at\": \"2026-05-08T15:00:00Z\"\n    }\n  ]\n}"
+                        }
+                    ]
+                },
+                {
+                    "name": "Approve Artist",
+                    "request": {
+                        "method": "PATCH",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{adminToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/admin/artists/{{artistId}}/approve",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "artists",
+                                "{{artistId}}",
+                                "approve"
+                            ]
+                        },
+                        "description": "Sets onboarding_status = 'approved' and verification_tier = 'basic'.\nOnly works when current status is 'pending_review'."
+                    },
+                    "response": [
+                        {
+                            "name": "200 — Approved",
+                            "status": "OK",
+                            "code": 200,
+                            "body": "{\n  \"success\": true,\n  \"message\": \"Artist approved successfully.\"\n}"
+                        },
+                        {
+                            "name": "404 — Not Found / Wrong Status",
+                            "status": "Not Found",
+                            "code": 404,
+                            "body": "{\n  \"success\": false,\n  \"message\": \"Artist not found or not in pending_review status.\"\n}"
+                        }
+                    ]
+                },
+                {
+                    "name": "Reject Artist",
+                    "request": {
+                        "method": "PATCH",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{adminToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/admin/artists/{{artistId}}/reject",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "artists",
+                                "{{artistId}}",
+                                "reject"
+                            ]
+                        },
+                        "description": "Sets onboarding_status = 'rejected'.\nWorks on 'pending_review' or 'draft' status."
+                    },
+                    "response": [
+                        {
+                            "name": "200 — Rejected",
+                            "status": "OK",
+                            "code": 200,
+                            "body": "{\n  \"success\": true,\n  \"message\": \"Artist rejected.\"\n}"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

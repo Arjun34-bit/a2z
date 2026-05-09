@@ -1,11 +1,12 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Plus_Jakarta_Sans, Geist_Mono } from "next/font/google";
 import ServiceWorkerRegister from "@/components/miscellenous/ServiceWorkerRegister";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const plusJakartaSans = Plus_Jakarta_Sans({
+  variable: "--font-plus-jakarta",
   subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700", "800"],
 });
 
 const geistMono = Geist_Mono({
@@ -14,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "A2Z Premium Services",
-  description: "Curated experiences, crafted for the discerning few.",
+  title: "A2Z — Beauty & Wellness Services",
+  description: "Book top-rated beauty and wellness services near you.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
@@ -38,7 +39,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#171717",
+  themeColor: "#6F55C8",
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
@@ -53,9 +54,9 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${plusJakartaSans.variable} ${geistMono.variable} h-full antialiased scrollbar-hide`}
     >
-      <body className="min-h-full flex flex-col">
+      <body className="min-h-full flex flex-col scrollbar-hide" style={{ fontFamily: "var(--font-plus-jakarta), 'Plus Jakarta Sans', sans-serif" }}>
         <ServiceWorkerRegister />
         {children}
       </body>

@@ -60,6 +60,8 @@ export class AuthUserRepository implements IAuthUserRepository {
    * Internal helper: creates user row, ensures 'user' role exists, links them.
    */
   private async _createUserWithRole(data: AuthUserCreationData, transaction: Transaction): Promise<AuthUser> {
+    const targetRole = data.role || 'user';
+
     // 1. Insert into app.users
     const userResults: any[] = await this.db.query(
       `INSERT INTO app.users (phone, created_at, updated_at)
@@ -73,18 +75,26 @@ export class AuthUserRepository implements IAuthUserRepository {
     );
     const userRow = (userResults as any)[0][0];
 
-    // 2. Ensure 'user' role exists in app.roles (INSERT ... ON CONFLICT DO NOTHING)
+    // 2. Ensure target role exists in app.roles (INSERT ... ON CONFLICT DO NOTHING)
     await this.db.query(
       `INSERT INTO app.roles (role_name)
-       VALUES ('user')
+       VALUES (:targetRole)
        ON CONFLICT (role_name) DO NOTHING`,
-      { type: QueryTypes.INSERT, transaction }
+      { 
+        replacements: { targetRole },
+        type: QueryTypes.INSERT, 
+        transaction 
+      }
     );
 
-    // 3. Get the role_id for 'user'
+    // 3. Get the role_id for the target role
     const roleResults: any[] = await this.db.query(
-      `SELECT role_id FROM app.roles WHERE role_name = 'user' LIMIT 1`,
-      { type: QueryTypes.SELECT, transaction }
+      `SELECT role_id FROM app.roles WHERE role_name = :targetRole LIMIT 1`,
+      { 
+        replacements: { targetRole },
+        type: QueryTypes.SELECT, 
+        transaction 
+      }
     );
     const roleId = roleResults[0].role_id;
 
@@ -100,6 +110,6 @@ export class AuthUserRepository implements IAuthUserRepository {
     );
 
     // Return hydrated entity with role
-    return new AuthUser({ ...userRow, role_name: 'user' });
+    return new AuthUser({ ...userRow, role_name: targetRole });
   }
 }

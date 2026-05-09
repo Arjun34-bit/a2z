@@ -30,7 +30,7 @@ export class AuthService implements IAuthService {
     return { success: true, message: 'OTP sent successfully' };
   }
 
-  async verifyOtp(phone: string, otp: string): Promise<{
+  async verifyOtp(phone: string, otp: string, intendedRole?: string): Promise<{
     success: boolean;
     data: {
       user: { id: string; phone: string | null | undefined; role: string, profile_stage: string | null | undefined };
@@ -54,7 +54,7 @@ export class AuthService implements IAuthService {
 
     if (!user) {
       isNewUser = true;
-      const creationData = AuthUser.createNewUser(phone);
+      const creationData = AuthUser.createNewUser(phone, intendedRole);
       user = await this.userRepo.create(creationData);
     }
 

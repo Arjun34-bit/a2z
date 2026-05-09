@@ -11,7 +11,7 @@ export const errorHandler = (
   let error = { ...err };
   error.message = err.message;
   error.name = err.name;
-  
+
   let customError: AppError | undefined;
 
   // 1. Zod Validation Errors
@@ -31,7 +31,7 @@ export const errorHandler = (
     const issues = err.errors || [];
     const errorMessages = issues.map((e: any) => e.message);
     customError = new ValidationError('Database Validation Error', errorMessages);
-  } 
+  }
   else if (err.name === 'SequelizeUniqueConstraintError') {
     const issues = err.errors || [];
     const errorMessages = issues.map((e: any) => e.message);
@@ -39,7 +39,7 @@ export const errorHandler = (
   }
   else if (err.name === 'SequelizeDatabaseError') {
     // Note: Don't expose internal DB schema details in production
-    customError = new BadRequestError('Invalid Database Operation');
+    customError = new BadRequestError(`Invalid Database Operation: ${err}`);
   }
 
   // 4. Fallback to passed AppError

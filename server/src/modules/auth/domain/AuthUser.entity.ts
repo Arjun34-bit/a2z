@@ -20,6 +20,7 @@ export interface AuthUserProps {
  */
 export interface AuthUserCreationData {
   phone: string;
+  role?: string;
 }
 
 /**
@@ -56,7 +57,7 @@ export class AuthUser {
   /**
    * Factory for creating a new user identity (phone-only registration)
    */
-  static createNewUser(phone: string): AuthUserCreationData {
-    return { phone };
+  static createNewUser(phone: string, role?: string): AuthUserCreationData {
+    return { phone, role };
   }
 }

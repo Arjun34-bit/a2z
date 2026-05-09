@@ -14,21 +14,21 @@ import {
 
 // ── Onboarding Step Constants ─────────────────────────────────────────────
 export const STEP = {
-  TYPE_SELECTION:   1,
-  BASIC_INFO:       2,
+  TYPE_SELECTION: 1,
+  BASIC_INFO: 2,
   // 3 = RESERVED for service-adding
-  IDENTITY_VERIFY:  4,
-  PORTFOLIO:        5,
+  IDENTITY_VERIFY: 4,
+  PORTFOLIO: 5,
 } as const;
 
 export const MIN_PORTFOLIO_IMAGES = 5;
-export const MAX_SUB_MEMBERS      = 4;
+export const MAX_SUB_MEMBERS = 4;
 
 export class ArtistService {
   constructor(
     private readonly artistRepo: IArtistRepository,
     private readonly imageService: ImageService
-  ) {}
+  ) { }
 
   // ── 1. Start Onboarding ─────────────────────────────────────────────────
   /**
@@ -115,13 +115,13 @@ export class ArtistService {
 
     // Validation — required fields vary by type
     const missing: string[] = [];
-    if (!data.full_name)  missing.push('full_name');
-    if (!data.city)       missing.push('city');
-    if (!data.locality)   missing.push('locality');
+    if (!data.full_name) missing.push('full_name');
+    if (!data.city) missing.push('city');
+    if (!data.locality) missing.push('locality');
     if (isParlor) {
       if (!data.parlor_name) missing.push('parlor_name');
-      if (!data.gstin)       missing.push('gstin');
-      if (!data.address)     missing.push('address');
+      if (!data.gstin) missing.push('gstin');
+      if (!data.address) missing.push('address');
     }
     if (missing.length > 0) {
       throw new ValidationError('Missing required fields', { missing });
@@ -129,11 +129,11 @@ export class ArtistService {
 
     // Update artist profile fields
     const profileData: ProfileUpdateData = {
-      full_name:       data.full_name       ?? null,
-      display_name:    data.display_name    ?? null,
-      city:            data.city            ?? null,
-      locality:        data.locality        ?? null,
-      bio:             data.bio             ?? null,
+      full_name: data.full_name ?? null,
+      display_name: data.display_name ?? null,
+      city: data.city ?? null,
+      locality: data.locality ?? null,
+      bio: data.bio ?? null,
       experience_years: data.experience_years ?? null,
     };
     await this.artistRepo.updateProfile(userId, profileData);
@@ -141,8 +141,8 @@ export class ArtistService {
     // Update organization details
     const orgUpdateData: { name?: string; gstin?: string | null; address?: string | null } = {};
     if (isParlor) {
-      orgUpdateData.name    = data.parlor_name!;
-      orgUpdateData.gstin   = data.gstin!;
+      orgUpdateData.name = data.parlor_name!;
+      orgUpdateData.gstin = data.gstin!;
       orgUpdateData.address = data.address!;
     } else {
       // Solo: use full_name as org name
@@ -206,9 +206,9 @@ export class ArtistService {
       .digest('hex');
 
     await this.artistRepo.upsertVerification(userId, {
-      kyc_status:    'pending',
+      kyc_status: 'pending',
       aadhaar_last4: aadhaar_last4,
-      aadhaar_hash:  aadhaar_hash,
+      aadhaar_hash: aadhaar_hash,
     });
 
     await this.artistRepo.advanceStep(userId, STEP.IDENTITY_VERIFY);
@@ -249,7 +249,7 @@ export class ArtistService {
    */
   async addSubArtist(ownerUserId: string, targetUserId: string) {
     const ownerProfile = await this.artistRepo.findByUserId(ownerUserId);
-    if (!ownerProfile)       throw new NotFoundError('Artist profile not found.');
+    if (!ownerProfile) throw new NotFoundError('Artist profile not found.');
     if (!ownerProfile.org_id) throw new BadRequestError('Organization not set. Complete onboarding step 1 first.');
 
     const org = await this.artistRepo.getOrganization(ownerProfile.org_id);
@@ -288,7 +288,7 @@ export class ArtistService {
   // ── 9. Get Sub-Artists ──────────────────────────────────────────────────
   async getSubArtists(ownerUserId: string) {
     const profile = await this.artistRepo.findByUserId(ownerUserId);
-    if (!profile)        throw new NotFoundError('Artist profile not found.');
+    if (!profile) throw new NotFoundError('Artist profile not found.');
     if (!profile.org_id) throw new BadRequestError('Organization not set.');
 
     const org = await this.artistRepo.getOrganization(profile.org_id);
@@ -316,14 +316,14 @@ export class ArtistService {
     }
 
     const isSub = await this.artistRepo.isSubArtist(userId);
-    const org   = profile.org_id ? await this.artistRepo.getOrganization(profile.org_id) : null;
+    const org = profile.org_id ? await this.artistRepo.getOrganization(profile.org_id) : null;
 
     const missing: string[] = [];
 
     // Common requirements for ALL artists
-    if (!profile.full_name)       missing.push('full_name');
-    if (!profile.city)            missing.push('city');
-    if (!profile.locality)        missing.push('locality');
+    if (!profile.full_name) missing.push('full_name');
+    if (!profile.city) missing.push('city');
+    if (!profile.locality) missing.push('locality');
     if (!profile.profile_image_id) missing.push('profile_image_id');
 
     const portfolioCount = await this.artistRepo.countPortfolio(userId);
@@ -333,7 +333,7 @@ export class ArtistService {
 
     // Parlor owner — additional organisation requirements
     if (!isSub && org?.org_type === 'parlor') {
-      if (!org.gstin)   missing.push('org.gstin');
+      if (!org.gstin) missing.push('org.gstin');
       if (!org.address) missing.push('org.address');
     }
 
@@ -362,17 +362,17 @@ export class ArtistService {
     const profile = await this.artistRepo.findByUserId(userId);
     if (!profile) throw new NotFoundError('Artist profile not found.');
 
-    const steps        = await this.artistRepo.getOnboardingSteps(userId);
-    const isSub        = await this.artistRepo.isSubArtist(userId);
-    const org          = profile.org_id ? await this.artistRepo.getOrganization(profile.org_id) : null;
+    const steps = await this.artistRepo.getOnboardingSteps(userId);
+    const isSub = await this.artistRepo.isSubArtist(userId);
+    const org = profile.org_id ? await this.artistRepo.getOrganization(profile.org_id) : null;
     const verification = await this.artistRepo.getVerification(userId);
     const portfolioCount = await this.artistRepo.countPortfolio(userId);
 
     const missing: string[] = [];
 
-    if (!profile.full_name)        missing.push('full_name');
-    if (!profile.city)             missing.push('city');
-    if (!profile.locality)         missing.push('locality');
+    if (!profile.full_name) missing.push('full_name');
+    if (!profile.city) missing.push('city');
+    if (!profile.locality) missing.push('locality');
     if (!profile.profile_image_id) missing.push('profile_image_id');
 
     if (portfolioCount < MIN_PORTFOLIO_IMAGES) {
@@ -380,7 +380,7 @@ export class ArtistService {
     }
 
     if (!isSub && org?.org_type === 'parlor') {
-      if (!org.gstin)   missing.push('org.gstin');
+      if (!org.gstin) missing.push('org.gstin');
       if (!org.address) missing.push('org.address');
     }
 
@@ -390,11 +390,11 @@ export class ArtistService {
 
     return {
       onboardingStatus: profile.onboarding_status,
-      orgType:          org?.org_type ?? null,
-      isSubArtist:      isSub,
-      steps:            steps ?? null,
+      orgType: org?.org_type ?? null,
+      isSubArtist: isSub,
+      steps: steps ?? null,
       missingRequirements: missing,
-      readyToSubmit:    missing.length === 0 && profile.onboarding_status === 'draft',
+      readyToSubmit: missing.length === 0 && profile.onboarding_status === 'draft',
     };
   }
 }
