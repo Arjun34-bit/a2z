@@ -1,3 +1,7 @@
+"use client";
+
+import { useCategories } from "@/hooks/category/use-category";
+import { useBanners } from "@/hooks/banner/use-banner";
 import {
   HomeHeader,
   SearchBar,
@@ -8,14 +12,20 @@ import {
   DesktopHero,
   DesktopCategories,
   DesktopBanner,
+  HomeSkeleton,
 } from "./index";
 
 /**
  * HomeView — composes all sections of the home screen.
- * Rendered as a server component; individual pieces can opt-in to
- * "use client" if they need interactivity.
  */
 export function HomeView() {
+  const { isLoading: categoriesLoading } = useCategories();
+  const { isLoading: bannersLoading } = useBanners();
+
+  // Show skeleton until critical data loads
+  if (categoriesLoading || bannersLoading) {
+    return <HomeSkeleton />;
+  }
   return (
     <>
       {/* --- Mobile View (< 768px) --- */}

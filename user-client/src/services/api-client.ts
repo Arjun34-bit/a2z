@@ -1,88 +1,74 @@
-import { API_BASE_URL } from "@/config/constants";
-import type { ApiResponse, ApiError } from "@/types";
+import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
+import { API_BASE_URL } from '@/config/constants';
+import type { ApiResponse, ApiError } from '@/types';
 
 /**
- * Centralized API client — wraps fetch with:
+ * Centralized API client — wraps axios with:
  * - Base URL injection
  * - Auth token headers
  * - Standardized error handling
  * - Type-safe responses
  */
 
-type RequestOptions = Omit<RequestInit, "body"> & {
-  body?: unknown;
-  params?: Record<string, string>;
-};
-
 class ApiClient {
-  private baseUrl: string;
+  private client: AxiosInstance;
 
-  constructor(baseUrl: string) {
-    this.baseUrl = baseUrl;
-  }
-
-  private async request<T>(
-    endpoint: string,
-    options: RequestOptions = {}
-  ): Promise<ApiResponse<T>> {
-    const { body, params, headers: customHeaders, ...restOptions } = options;
-
-    const url = new URL(`${this.baseUrl}${endpoint}`);
-    if (params) {
-      Object.entries(params).forEach(([key, value]) =>
-        url.searchParams.append(key, value)
-      );
-    }
-
-    const headers: HeadersInit = {
-      "Content-Type": "application/json",
-      ...customHeaders,
-    };
-
-    // Add auth token from localStorage if available
-    if (typeof window !== "undefined") {
-      const token = localStorage.getItem("auth_token");
-      if (token) {
-        (headers as Record<string, string>)["Authorization"] =
-          `Bearer ${token}`;
-      }
-    }
-
-    const response = await fetch(url.toString(), {
-      ...restOptions,
-      headers,
-      body: body ? JSON.stringify(body) : undefined,
+  constructor(baseURL: string) {
+    this.client = axios.create({
+      baseURL,
+      headers: {
+        'Content-Type': 'application/json',
+      },
     });
 
-    if (!response.ok) {
-      const error: ApiError = await response.json().catch(() => ({
-        message: "An unexpected error occurred",
-        statusCode: response.status,
-      }));
-      throw error;
-    }
+    // Request interceptor for auth token
+    this.client.interceptors.request.use((config) => {
+      if (typeof window !== 'undefined') {
+        const token = localStorage.getItem('auth_token');
+        if (token && config.headers) {
+          config.headers.Authorization = `Bearer ${token}`;
+        }
+      }
+      return config;
+    });
 
-    return response.json() as Promise<ApiResponse<T>>;
+    // Response interceptor for error handling
+    this.client.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        const apiError: ApiError = {
+          message: error.response?.data?.message || error.message || 'An unexpected error occurred',
+          statusCode: error.response?.status || 500,
+          errors: error.response?.data?.errors,
+        };
+        return Promise.reject(apiError);
+      }
+    );
   }
 
-  async get<T>(endpoint: string, options?: RequestOptions) {
-    return this.request<T>(endpoint, { ...options, method: "GET" });
+  private async request<T>(config: AxiosRequestConfig): Promise<ApiResponse<T>> {
+    const response: AxiosResponse<ApiResponse<T>> = await this.client.request(config);
+    return response.data;
   }
 
-  async post<T>(endpoint: string, body?: unknown, options?: RequestOptions) {
-    return this.request<T>(endpoint, { ...options, method: "POST", body });
+  async get<T>(url: string, config?: AxiosRequestConfig) {
+    return this.request<T>({ ...config, method: 'GET', url });
   }
 
-  async put<T>(endpoint: string, body?: unknown, options?: RequestOptions) {
-    return this.request<T>(endpoint, { ...options, method: "PUT", body });
+  async post<T>(url: string, data?: unknown, config?: AxiosRequestConfig) {
+    return this.request<T>({ ...config, method: 'POST', url, data });
   }
 
-  async patch<T>(endpoint: string, body?: unknown, options?: RequestOptions) {
-    return this.request<T>(endpoint, { ...options, method: "PATCH", body });
+  async put<T>(url: string, data?: unknown, config?: AxiosRequestConfig) {
+    return this.request<T>({ ...config, method: 'PUT', url, data });
   }
 
-  async delete<T>(endpoint: string, options?: RequestOptions) {
-    return this.request<T>(endpoint, { ...options, method: "DELETE" });
+  async patch<T>(url: string, data?: unknown, config?: AxiosRequestConfig) {
+    return this.request<T>({ ...config, method: 'PATCH', url, data });
+  }
+
+  async delete<T>(url: string, config?: AxiosRequestConfig) {
+    return this.request<T>({ ...config, method: 'DELETE', url });
   }
 }
 

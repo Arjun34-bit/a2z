@@ -1,6 +1,7 @@
 "use client";
 
 import { ThemeProvider } from "./theme-provider";
+import { ReactQueryProvider } from "./query-provider";
 
 interface ProvidersProps {
   children: React.ReactNode;
@@ -11,5 +12,9 @@ interface ProvidersProps {
  * Add new providers here as the app grows (e.g. QueryClientProvider, AuthProvider)
  */
 export function Providers({ children }: ProvidersProps) {
-  return <ThemeProvider>{children}</ThemeProvider>;
+  return (
+    <ReactQueryProvider>
+      <ThemeProvider>{children}</ThemeProvider>
+    </ReactQueryProvider>
+  );
 }

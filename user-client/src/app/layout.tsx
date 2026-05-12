@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Plus_Jakarta_Sans, Geist_Mono } from "next/font/google";
 import ServiceWorkerRegister from "@/components/miscellenous/ServiceWorkerRegister";
+import { Providers } from "@/providers";
 import "./globals.css";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
@@ -58,7 +59,9 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col scrollbar-hide" style={{ fontFamily: "var(--font-plus-jakarta), 'Plus Jakarta Sans', sans-serif" }}>
         <ServiceWorkerRegister />
-        {children}
+        <Providers>
+          {children}
+        </Providers>
       </body>
     </html>
   );

@@ -7,3 +7,4 @@ export { DesktopHeader } from "./components/DesktopHeader";
 export { DesktopHero } from "./components/DesktopHero";
 export { DesktopCategories } from "./components/DesktopCategories";
 export { DesktopBanner } from "./components/DesktopBanner";
+export { HomeSkeleton } from "./components/HomeSkeleton";
