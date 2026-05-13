@@ -38,9 +38,9 @@ export function DesktopHeader() {
             </div>
 
             {/* Login / Sign Up */}
-            <button 
+            <button
               onClick={() => setIsLoginModalOpen(true)}
-              className="h-11 px-6 bg-[#6F55C8] hover:bg-[#5540A8] text-white text-sm font-semibold rounded-xl transition-all shadow-sm hover:shadow-md"
+              className="h-11 px-6 bg-[#6F55C8] hover:bg-[#5540A8] text-white text-sm font-semibold rounded-xl transition-all shadow-sm hover:shadow-md cursor:pointer"
             >
               Login / Sign up
             </button>
@@ -62,9 +62,9 @@ export function DesktopHeader() {
         </div>
       </header>
 
-      <LoginModal 
-        open={isLoginModalOpen} 
-        onClose={() => setIsLoginModalOpen(false)} 
+      <LoginModal
+        open={isLoginModalOpen}
+        onClose={() => setIsLoginModalOpen(false)}
       />
     </>
   );

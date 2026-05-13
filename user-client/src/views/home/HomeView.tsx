@@ -23,9 +23,9 @@ export function HomeView() {
   const { isLoading: bannersLoading } = useBanners();
 
   // Show skeleton until critical data loads
-  if (categoriesLoading || bannersLoading) {
-    return <HomeSkeleton />;
-  }
+  // if (categoriesLoading || bannersLoading) {
+  //   return <HomeSkeleton />;
+  // }
   return (
     <>
       {/* --- Mobile View (< 768px) --- */}
