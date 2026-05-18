@@ -3,10 +3,10 @@
 import { useState } from "react";
 import Link from "next/link";
 import { MapPin, Search } from "lucide-react";
-import { LoginModal } from "@/components/modals/loginModal";
+import { LoginAuthFlow } from "@/components/auth/LoginAuthFlow";
 
 export function DesktopHeader() {
-  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [isLoginOpen, setIsLoginOpen] = useState(false);
 
   return (
     <>
@@ -39,8 +39,8 @@ export function DesktopHeader() {
 
             {/* Login / Sign Up */}
             <button
-              onClick={() => setIsLoginModalOpen(true)}
-              className="h-11 px-6 bg-[#6F55C8] hover:bg-[#5540A8] text-white text-sm font-semibold rounded-xl transition-all shadow-sm hover:shadow-md cursor:pointer"
+              onClick={() => setIsLoginOpen(true)}
+              className="h-11 px-6 bg-[#6F55C8] hover:bg-[#5540A8] text-white text-sm font-semibold rounded-xl transition-all shadow-sm hover:shadow-md cursor-pointer"
             >
               Login / Sign up
             </button>
@@ -52,8 +52,9 @@ export function DesktopHeader() {
               <Link
                 key={link}
                 href={`/${link.toLowerCase().replace(/\s+/g, "-")}`}
-                className={`text-sm font-semibold hover:text-[#6F55C8] transition-colors ${link === "Home" ? "text-[#1A1035]" : "text-[#6B6480]"
-                  }`}
+                className={`text-sm font-semibold hover:text-[#6F55C8] transition-colors ${
+                  link === "Home" ? "text-[#1A1035]" : "text-[#6B6480]"
+                }`}
               >
                 {link}
               </Link>
@@ -62,10 +63,8 @@ export function DesktopHeader() {
         </div>
       </header>
 
-      <LoginModal
-        open={isLoginModalOpen}
-        onClose={() => setIsLoginModalOpen(false)}
-      />
+      {/* Auth flow: Dialog on desktop */}
+      <LoginAuthFlow open={isLoginOpen} onClose={() => setIsLoginOpen(false)} />
     </>
   );
 }
